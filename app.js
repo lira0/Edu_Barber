@@ -134,18 +134,34 @@ async function loadBarbers() {
 
   if (availableBarbers.length === 1) {
     selectedBarber = availableBarbers[0];
-    barberStep.classList.add("hidden");
-    document.getElementById("dateStepNumber").textContent = "1";
-    document.getElementById("timeStepNumber").textContent = "2";
-    document.getElementById("clientStepNumber").textContent = "3";
+    barberStep?.classList.add("hidden");
+
+    const dateStepNumber = document.getElementById("dateStepNumber");
+    const timeStepNumber = document.getElementById("timeStepNumber");
+    const clientStepNumber = document.getElementById("clientStepNumber");
+
+    if (dateStepNumber) dateStepNumber.textContent = "1";
+    if (timeStepNumber) timeStepNumber.textContent = "2";
+    if (clientStepNumber) clientStepNumber.textContent = "3";
+
     renderDates();
     return;
   }
 
-  barberStep.classList.remove("hidden");
-  document.getElementById("dateStepNumber").textContent = "2";
-  document.getElementById("timeStepNumber").textContent = "3";
-  document.getElementById("clientStepNumber").textContent = "4";
+  barberStep?.classList.remove("hidden");
+
+  const dateStepNumber = document.getElementById("dateStepNumber");
+  const timeStepNumber = document.getElementById("timeStepNumber");
+  const clientStepNumber = document.getElementById("clientStepNumber");
+
+  if (dateStepNumber) dateStepNumber.textContent = "2";
+  if (timeStepNumber) timeStepNumber.textContent = "3";
+  if (clientStepNumber) clientStepNumber.textContent = "4";
+
+  if (!barberGrid) {
+    showBookingStatus("Erro de interface: seletor de profissionais não encontrado.", true);
+    return;
+  }
 
   barberGrid.innerHTML = "";
   availableBarbers.forEach(barber => {

@@ -205,3 +205,10 @@ O próximo passo será atualizar o Agenda Agent APK para:
 5. atualizar `sent`, `failed`, `attempts` e `last_error`.
 
 O site público NÃO recebe permissão para ler `notification_jobs`.
+
+## Correção da seleção de datas
+
+Esta revisão corrige um erro de interface no qual `app.js` esperava os elementos
+`barberStep`, `barberGrid` e os IDs dos números das etapas, mas eles não estavam
+presentes no `index.html`. Isso fazia o JavaScript parar antes de `renderDates()`
+e deixava a lista de dias vazia.

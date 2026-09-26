@@ -85,18 +85,49 @@
         </div>
         <div class="booking-status" id="bookingStatus" aria-live="polite"></div>
 
+        <div class="step hidden" id="barberStep">
+          <div class="step-title">
+            <span>1</span>
+            <div>
+              <strong>Escolha o profissional</strong>
+              <small>Selecione quem fará seu atendimento.</small>
+            </div>
+          </div>
+          <div class="barber-grid" id="barberGrid"></div>
+        </div>
+
         <div class="step">
-          <div class="step-title"><span>1</span><div><strong>Escolha o dia</strong><small>Mostramos os próximos dias disponíveis.</small></div></div>
+          <div class="step-title">
+            <span id="dateStepNumber">1</span>
+            <div>
+              <strong>Escolha o dia</strong>
+              <small>Mostramos os próximos dias disponíveis.</small>
+            </div>
+          </div>
           <div class="date-strip" id="dateStrip"></div>
         </div>
 
         <div class="step">
-          <div class="step-title"><span>2</span><div><strong>Horários disponíveis</strong><small id="selectedDateLabel">Selecione uma data acima.</small></div></div>
-          <div class="time-grid" id="timeGrid"><div class="empty-state">Escolha um dia para visualizar os horários.</div></div>
+          <div class="step-title">
+            <span id="timeStepNumber">2</span>
+            <div>
+              <strong>Horários disponíveis</strong>
+              <small id="selectedDateLabel">Selecione uma data acima.</small>
+            </div>
+          </div>
+          <div class="time-grid" id="timeGrid">
+            <div class="empty-state">Escolha um dia para visualizar os horários.</div>
+          </div>
         </div>
 
         <div class="step client-step hidden" id="clientStep">
-          <div class="step-title"><span>3</span><div><strong>Seus dados</strong><small>Precisamos apenas do seu nome e WhatsApp.</small></div></div>
+          <div class="step-title">
+            <span id="clientStepNumber">3</span>
+            <div>
+              <strong>Seus dados</strong>
+              <small>Precisamos apenas do seu nome e WhatsApp.</small>
+            </div>
+          </div>
           <div class="selected-slot" id="selectedSlotSummary"></div>
           <form id="bookingForm" novalidate>
             <div class="field">
