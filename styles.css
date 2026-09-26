@@ -700,3 +700,123 @@ body.drawer-open{
   border-color:rgba(215,170,88,.60);
   background:rgba(215,170,88,.11);
 }
+
+
+/* ---------- Confirmação + criação de conta v4 ---------- */
+body.dialog-open{
+  overflow:hidden;
+}
+
+.account-prompt-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(0,0,0,.76);
+  backdrop-filter:blur(7px);
+}
+
+.account-prompt-dialog{
+  position:relative;
+  width:min(100%,520px);
+  padding:34px;
+  border:1px solid rgba(215,170,88,.32);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(215,170,88,.09),transparent 36%),
+    #111;
+  box-shadow:0 30px 90px rgba(0,0,0,.65);
+}
+
+.account-prompt-icon{
+  width:52px;
+  height:52px;
+  display:grid;
+  place-items:center;
+  margin-bottom:20px;
+  border-radius:50%;
+  background:rgba(95,207,145,.12);
+  color:#aef0ca;
+  font-size:25px;
+  font-weight:800;
+}
+
+.account-prompt-dialog h2{
+  margin:10px 0 12px;
+  font-family:"Bebas Neue",sans-serif;
+  font-size:44px;
+  line-height:1;
+  font-weight:400;
+}
+
+.account-prompt-dialog p{
+  margin:0;
+  color:var(--muted);
+  line-height:1.7;
+}
+
+.account-prompt-dialog p strong{
+  color:#eee8dd;
+}
+
+.account-prompt-close{
+  position:absolute;
+  top:16px;
+  right:16px;
+  width:38px;
+  height:38px;
+  border:1px solid #303030;
+  border-radius:11px;
+  background:#181818;
+  color:#eee;
+  font-size:22px;
+  cursor:pointer;
+}
+
+.account-prompt-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin-top:26px;
+}
+
+.account-prompt-actions .primary-btn,
+.account-prompt-actions .secondary-btn{
+  width:100%;
+}
+
+.field-help{
+  display:block;
+  margin-top:1px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+}
+
+@media(max-width:600px){
+  .account-prompt-dialog{
+    padding:28px 20px 22px;
+    border-radius:20px;
+  }
+
+  .account-prompt-dialog h2{
+    font-size:38px;
+  }
+}
+
+
+/* ---------- Dialog de acompanhamento v6 ---------- */
+.account-prompt-dialog #accountPromptText strong:first-child{
+  display:block;
+  margin-bottom:10px;
+  color:#fff3d2;
+  font-size:16px;
+  line-height:1.5;
+}
+
+.account-prompt-dialog #accountPromptText{
+  color:var(--muted);
+  line-height:1.72;
+}

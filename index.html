@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260926-3" />
+  <link rel="stylesheet" href="./styles.css?v=20260926-6" />
 </head>
 <body>
   <header class="topbar">
@@ -161,6 +161,34 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <div class="account-prompt-backdrop hidden" id="accountPromptBackdrop">
+    <section class="account-prompt-dialog" id="accountPromptDialog"
+             role="dialog" aria-modal="true" aria-labelledby="accountPromptTitle">
+      <button class="account-prompt-close" id="accountPromptClose" type="button"
+              aria-label="Fechar">×</button>
+
+      <div class="account-prompt-icon">✓</div>
+      <span class="eyebrow">AGENDAMENTO CONFIRMADO</span>
+      <h2 id="accountPromptTitle">Acompanhe seus agendamentos</h2>
+
+      <p id="accountPromptText">
+        <strong>Para acompanhar os horários que você marcou, é necessário criar uma conta.</strong>
+        É rápido: você usa apenas seu WhatsApp e uma senha. Depois poderá acessar
+        <strong>Meus agendamentos</strong> sempre que quiser.
+      </p>
+
+      <div class="account-prompt-actions">
+        <button class="primary-btn" id="accountPromptPrimary" type="button">
+          Criar conta para acompanhar
+        </button>
+        <button class="secondary-btn" id="accountPromptSecondary" type="button">
+          Agora não
+        </button>
+      </div>
+    </section>
+  </div>
+
+
   <div class="user-drawer-backdrop" id="userDrawerBackdrop"></div>
   <aside class="user-drawer" id="userDrawer" aria-hidden="true">
     <div class="user-drawer-header">
@@ -207,7 +235,7 @@
   <script src="./config.js?v=20260926-2"></script>
   <script src="./supabase-client.js?v=20260926-2"></script>
   <script src="./site-auth.js?v=20260926-2"></script>
-  <script src="./user-menu.js?v=20260926-3"></script>
-  <script src="./app.js?v=20260926-2"></script>
+  <script src="./user-menu.js?v=20260926-4"></script>
+  <script src="./app.js?v=20260926-6"></script>
 </body>
 </html>

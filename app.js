@@ -356,6 +356,156 @@ async function prefillFromAccount() {
   }
 }
 
+
+async function getCurrentBookingSession() {
+  if (!window.sb) return null;
+
+  try {
+    const { data } = await window.sb.auth.getSession();
+    return data.session || null;
+  } catch (error) {
+    console.warn("Não foi possível consultar a sessão:", error);
+    return null;
+  }
+}
+
+function ensureBookingSuccessDialog() {
+  let backdrop = document.getElementById("accountPromptBackdrop");
+
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.id = "accountPromptBackdrop";
+    backdrop.className = "account-prompt-backdrop hidden";
+
+    backdrop.innerHTML = `
+      <section class="account-prompt-dialog" id="accountPromptDialog"
+               role="dialog" aria-modal="true" aria-labelledby="accountPromptTitle">
+        <button class="account-prompt-close" id="accountPromptClose" type="button"
+                aria-label="Fechar">×</button>
+
+        <div class="account-prompt-icon">✓</div>
+        <span class="eyebrow">AGENDAMENTO CONFIRMADO</span>
+        <h2 id="accountPromptTitle">Acompanhe seus agendamentos</h2>
+
+        <p id="accountPromptText"></p>
+
+        <div class="account-prompt-actions">
+          <button class="primary-btn" id="accountPromptPrimary" type="button"></button>
+          <button class="secondary-btn" id="accountPromptSecondary" type="button">
+            Agora não
+          </button>
+        </div>
+      </section>
+    `;
+
+    document.body.appendChild(backdrop);
+  }
+
+  const text = backdrop.querySelector("#accountPromptText") || backdrop.querySelector("p");
+  if (text && !text.id) text.id = "accountPromptText";
+
+  const oldPrimary = document.getElementById("accountPromptCreate");
+  if (oldPrimary) oldPrimary.id = "accountPromptPrimary";
+
+  const oldSecondary = document.getElementById("accountPromptSkip");
+  if (oldSecondary) oldSecondary.id = "accountPromptSecondary";
+
+  return backdrop;
+}
+
+function closeBookingSuccessDialog() {
+  const backdrop = document.getElementById("accountPromptBackdrop");
+  if (!backdrop) return;
+
+  backdrop.classList.add("hidden");
+  document.body.classList.remove("dialog-open");
+}
+
+function bindBookingSuccessDialog() {
+  const backdrop = ensureBookingSuccessDialog();
+  const closeButton = document.getElementById("accountPromptClose");
+  const secondaryButton = document.getElementById("accountPromptSecondary");
+
+  if (!backdrop.dataset.bound) {
+    backdrop.dataset.bound = "1";
+
+    backdrop.addEventListener("click", event => {
+      if (event.target === backdrop) {
+        closeBookingSuccessDialog();
+      }
+    });
+  }
+
+  if (closeButton && !closeButton.dataset.bound) {
+    closeButton.dataset.bound = "1";
+    closeButton.addEventListener("click", closeBookingSuccessDialog);
+  }
+
+  if (secondaryButton && !secondaryButton.dataset.bound) {
+    secondaryButton.dataset.bound = "1";
+    secondaryButton.addEventListener("click", closeBookingSuccessDialog);
+  }
+}
+
+async function showBookingSuccessDialog({ name, phone }) {
+  bindBookingSuccessDialog();
+
+  const backdrop = document.getElementById("accountPromptBackdrop");
+  const title = document.getElementById("accountPromptTitle");
+  const text = document.getElementById("accountPromptText");
+  const primary = document.getElementById("accountPromptPrimary");
+  const secondary = document.getElementById("accountPromptSecondary");
+
+  if (!backdrop || !title || !text || !primary) {
+    console.error("Não foi possível montar o diálogo de confirmação.");
+    return;
+  }
+
+  const session = await getCurrentBookingSession();
+  const loggedIn = Boolean(session?.user);
+
+  if (loggedIn) {
+    title.textContent = "Agendamento confirmado";
+    text.innerHTML = `
+      Seu horário foi marcado com sucesso. Você pode acompanhar este e seus outros
+      horários pela página <strong>Meus agendamentos</strong>.
+    `;
+
+    primary.textContent = "Ver meus agendamentos";
+    primary.onclick = () => {
+      window.location.href = "./meus-agendamentos.html";
+    };
+
+    if (secondary) secondary.textContent = "Fechar";
+  } else {
+    title.textContent = "Acompanhe seus agendamentos";
+    text.innerHTML = `
+      <strong>Para acompanhar os horários que você marcou, é necessário criar uma conta.</strong>
+      É rápido: use apenas seu WhatsApp e uma senha. Depois você poderá acessar
+      <strong>Meus agendamentos</strong> e consultar seus horários sempre que quiser.
+    `;
+
+    try {
+      sessionStorage.setItem(
+        "barbershop_signup_draft",
+        JSON.stringify({ name, phone })
+      );
+    } catch (_) {}
+
+    primary.textContent = "Criar conta para acompanhar";
+    primary.onclick = () => {
+      window.location.href = "./cadastro.html?next=meus-agendamentos";
+    };
+
+    if (secondary) secondary.textContent = "Agora não";
+  }
+
+  backdrop.classList.remove("hidden");
+  document.body.classList.add("dialog-open");
+}
+
+bindBookingSuccessDialog();
+
 bookingForm.addEventListener("submit", async event => {
   event.preventDefault();
 
@@ -394,14 +544,24 @@ bookingForm.addEventListener("submit", async event => {
     });
 
     if (error) {
-      if (
-        String(error.message || "").includes("HORARIO_INDISPONIVEL") ||
-        String(error.details || "").includes("HORARIO_INDISPONIVEL")
-      ) {
+      const rawError = `${error.message || ""} ${error.details || ""}`;
+
+      if (rawError.includes("JA_POSSUI_AGENDAMENTO_NO_DIA")) {
+        throw new Error(
+          "Este WhatsApp já possui um agendamento ativo nesse dia. " +
+          "Escolha outro dia ou cancele o agendamento anterior."
+        );
+      }
+
+      if (rawError.includes("HORARIO_INDISPONIVEL")) {
         throw new Error("Esse horário acabou de ser reservado. Escolha outro.");
       }
+
       throw error;
     }
+
+    const bookedPhone = phone;
+    const bookedName = name;
 
     showBookingStatus(
       `<strong>Agendamento confirmado!</strong><br>
@@ -417,6 +577,13 @@ bookingForm.addEventListener("submit", async event => {
 
     await renderTimes();
     bookingStatus.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    setTimeout(() => {
+      showBookingSuccessDialog({
+        name: bookedName,
+        phone: bookedPhone
+      });
+    }, 300);
   } catch (error) {
     console.error(error);
     showBookingStatus(
