@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", initUserMenu);
+
+async function initUserMenu() {
   if (!window.sb) return;
 
   const { data: sessionData } = await window.sb.auth.getSession();
@@ -6,78 +8,74 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!user) return;
 
   let profile = null;
+
   try {
-    const { data } = await window.sb
+    const { data, error } = await window.sb
       .from("profiles")
       .select("full_name, role")
       .eq("id", user.id)
       .single();
-    profile = data;
-  } catch (_) {}
+
+    if (!error) profile = data;
+  } catch (error) {
+    console.warn("Não foi possível carregar o perfil do menu:", error);
+  }
 
   const canAdmin = ["barber", "admin"].includes(profile?.role);
-  const name = profile?.full_name || user.user_metadata?.full_name || user.email || "Cliente";
+  const name =
+    profile?.full_name ||
+    user.user_metadata?.full_name ||
+    user.email ||
+    "Cliente";
 
-  const trigger = document.createElement("button");
-  trigger.type = "button";
-  trigger.className = "user-menu-trigger";
-  trigger.setAttribute("aria-label", "Abrir menu do usuário");
-  trigger.textContent = "☰";
+  const trigger = document.getElementById("userMenuTrigger");
+  const backdrop = document.getElementById("userDrawerBackdrop");
+  const drawer = document.getElementById("userDrawer");
+  const closeButton = document.getElementById("userDrawerClose");
+  const logoutButton = document.getElementById("drawerLogout");
+  const adminLink = document.getElementById("userDrawerAdmin");
+  const drawerName = document.getElementById("userDrawerName");
+  const drawerEmail = document.getElementById("userDrawerEmail");
 
-  const backdrop = document.createElement("div");
-  backdrop.className = "user-drawer-backdrop";
+  if (!trigger || !drawer || !backdrop) {
+    console.error("Estrutura do menu lateral não encontrada no HTML.");
+    return;
+  }
 
-  const drawer = document.createElement("aside");
-  drawer.className = "user-drawer";
-  drawer.setAttribute("aria-hidden", "true");
-  drawer.innerHTML = `
-    <div class="user-drawer-header">
-      <div class="user-drawer-person">
-        <strong>${escapeMenuHtml(name)}</strong>
-        <span>${escapeMenuHtml(user.email || "")}</span>
-      </div>
-      <button class="user-drawer-close" type="button" aria-label="Fechar menu">×</button>
-    </div>
+  trigger.classList.remove("hidden");
 
-    <nav class="user-drawer-nav">
-      <a href="./index.html">⌂ Início</a>
-      <a href="./index.html#agendamento">✂ Agendar horário</a>
-      <a href="./meus-agendamentos.html">📅 Meus agendamentos</a>
-      <a href="./conta.html">👤 Minha conta</a>
-      ${canAdmin ? '<a class="admin-only" href="./admin.html">💈 Painel administrativo</a>' : ''}
-    </nav>
+  if (drawerName) drawerName.textContent = name;
+  if (drawerEmail) drawerEmail.textContent = user.email || "";
 
-    <div class="user-drawer-footer user-drawer-nav">
-      <button id="drawerLogout" type="button">↪ Sair</button>
-    </div>
-  `;
+  if (adminLink) {
+    adminLink.classList.toggle("hidden", !canAdmin);
+  }
 
-  document.body.appendChild(trigger);
-  document.body.appendChild(backdrop);
-  document.body.appendChild(drawer);
-
-  const open = () => {
+  const openMenu = () => {
     backdrop.classList.add("open");
     drawer.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
+    document.body.classList.add("drawer-open");
   };
-  const close = () => {
+
+  const closeMenu = () => {
     backdrop.classList.remove("open");
     drawer.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("drawer-open");
   };
 
-  trigger.addEventListener("click", open);
-  backdrop.addEventListener("click", close);
-  drawer.querySelector(".user-drawer-close")?.addEventListener("click", close);
-  drawer.querySelector("#drawerLogout")?.addEventListener("click", async () => {
+  trigger.addEventListener("click", openMenu);
+  backdrop.addEventListener("click", closeMenu);
+  closeButton?.addEventListener("click", closeMenu);
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeMenu();
+  });
+
+  logoutButton?.addEventListener("click", async () => {
+    logoutButton.disabled = true;
     await window.sb.auth.signOut();
     window.location.href = "./index.html";
   });
-});
-
-function escapeMenuHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value ?? "");
-  return div.innerHTML;
 }
