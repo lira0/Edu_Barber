@@ -1,5 +1,10 @@
 const authStatus = document.getElementById("authStatus");
 
+// Clientes não precisam fornecer e-mail.
+// O site converte o WhatsApp em um e-mail técnico interno apenas para o Supabase Auth.
+// Esse endereço nunca é mostrado ao cliente e não recebe mensagens.
+const CUSTOMER_AUTH_DOMAIN = "barbearia.invalid";
+
 function setAuthStatus(message, type = "info") {
   if (!authStatus) return;
   authStatus.textContent = message;
@@ -8,6 +13,7 @@ function setAuthStatus(message, type = "info") {
 
 function ensureSupabase() {
   if (window.sb) return true;
+
   setAuthStatus(
     "Supabase ainda não foi configurado. Preencha a URL e a Publishable Key em config.js.",
     "error"
@@ -19,8 +25,39 @@ function digits(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
+function normalizeNationalPhone(value) {
+  let d = digits(value);
+
+  if (d.startsWith("55") && (d.length === 12 || d.length === 13)) {
+    d = d.slice(2);
+  }
+
+  if (d.length !== 10 && d.length !== 11) return null;
+  return d;
+}
+
+function toDatabasePhone(value) {
+  const national = normalizeNationalPhone(value);
+  return national ? `55${national}` : null;
+}
+
+function customerTechnicalEmail(value) {
+  const dbPhone = toDatabasePhone(value);
+  if (!dbPhone) return null;
+
+  return `cliente.${dbPhone}@${CUSTOMER_AUTH_DOMAIN}`;
+}
+
+function isTechnicalCustomerEmail(email) {
+  return String(email || "")
+    .toLowerCase()
+    .endsWith(`@${CUSTOMER_AUTH_DOMAIN}`);
+}
+
 function formatPhone(value) {
-  const d = digits(value).slice(0, 11);
+  const d = normalizeNationalPhone(value) || digits(value).slice(-11);
+
+  if (!d) return "";
   if (d.length <= 2) return d;
   if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
   if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
@@ -28,97 +65,217 @@ function formatPhone(value) {
 }
 
 document.querySelectorAll("[data-phone-mask]").forEach(input => {
-  input.addEventListener("input", e => {
-    e.target.value = formatPhone(e.target.value);
+  input.addEventListener("input", event => {
+    event.target.value = formatPhone(event.target.value);
   });
 });
 
+async function claimGuestAppointments() {
+  if (!window.sb) return;
+
+  try {
+    const { error } = await window.sb.rpc("claim_my_guest_appointments");
+
+    if (error) {
+      console.warn("Não foi possível vincular agendamentos antigos:", error);
+    }
+  } catch (error) {
+    console.warn("Falha ao vincular agendamentos antigos:", error);
+  }
+}
+
+function readSignupDraft() {
+  try {
+    return JSON.parse(sessionStorage.getItem("barbershop_signup_draft") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function clearSignupDraft() {
+  try {
+    sessionStorage.removeItem("barbershop_signup_draft");
+  } catch (_) {}
+}
+
 const registerForm = document.getElementById("registerForm");
-registerForm?.addEventListener("submit", async (event) => {
+
+if (registerForm) {
+  const draft = readSignupDraft();
+
+  if (draft) {
+    const nameInput = document.getElementById("registerName");
+    const phoneInput = document.getElementById("registerPhone");
+
+    if (nameInput && draft.name) nameInput.value = draft.name;
+    if (phoneInput && draft.phone) phoneInput.value = formatPhone(draft.phone);
+  }
+}
+
+registerForm?.addEventListener("submit", async event => {
   event.preventDefault();
+
   if (!ensureSupabase()) return;
 
   const button = registerForm.querySelector('button[type="submit"]');
+
   const fullName = document.getElementById("registerName").value.trim();
-  const phoneRaw = digits(document.getElementById("registerPhone").value);
-  const email = document.getElementById("registerEmail").value.trim().toLowerCase();
+  const phoneInput = document.getElementById("registerPhone").value;
+  const dbPhone = toDatabasePhone(phoneInput);
+  const technicalEmail = customerTechnicalEmail(phoneInput);
   const password = document.getElementById("registerPassword").value;
   const confirmPassword = document.getElementById("registerConfirmPassword").value;
 
-  if (fullName.length < 2) return setAuthStatus("Informe seu nome.", "error");
-  if (phoneRaw.length < 10 || phoneRaw.length > 11) return setAuthStatus("Informe um telefone válido com DDD.", "error");
-  if (!email.includes("@")) return setAuthStatus("Informe um e-mail válido.", "error");
-  if (password.length < 6) return setAuthStatus("A senha precisa ter pelo menos 6 caracteres.", "error");
-  if (password !== confirmPassword) return setAuthStatus("As senhas não coincidem.", "error");
+  if (fullName.length < 2) {
+    return setAuthStatus("Informe seu nome.", "error");
+  }
+
+  if (!dbPhone || !technicalEmail) {
+    return setAuthStatus("Informe um WhatsApp válido com DDD.", "error");
+  }
+
+  if (password.length < 6) {
+    return setAuthStatus("A senha precisa ter pelo menos 6 caracteres.", "error");
+  }
+
+  if (password !== confirmPassword) {
+    return setAuthStatus("As senhas não coincidem.", "error");
+  }
 
   button.disabled = true;
   button.textContent = "Criando conta...";
   setAuthStatus("Criando sua conta...", "info");
 
-  const redirectTo = new URL("./login.html?confirmed=1", window.location.href).href;
-
   const { data, error } = await window.sb.auth.signUp({
-    email,
+    email: technicalEmail,
     password,
     options: {
-      emailRedirectTo: redirectTo,
       data: {
         full_name: fullName,
-        phone: `55${phoneRaw}`
+        phone: dbPhone,
+        customer_account: true
       }
     }
   });
 
-  button.disabled = false;
-  button.textContent = "Criar minha conta";
-
   if (error) {
-    return setAuthStatus(error.message || "Não foi possível criar a conta.", "error");
+    button.disabled = false;
+    button.textContent = "Criar minha conta";
+
+    const raw = String(error.message || "");
+
+    if (raw.toLowerCase().includes("already registered")) {
+      return setAuthStatus(
+        "Já existe uma conta usando esse WhatsApp. Use a tela de login.",
+        "error"
+      );
+    }
+
+    return setAuthStatus(
+      raw || "Não foi possível criar a conta.",
+      "error"
+    );
   }
 
-  if (data.session) {
-    setAuthStatus("Conta criada. Entrando...", "success");
-    setTimeout(() => window.location.href = "./conta.html", 700);
-  } else {
-    setAuthStatus(
-      "Conta criada! Confira seu e-mail para confirmar o cadastro e depois faça login.",
-      "success"
+  if (!data.session) {
+    button.disabled = false;
+    button.textContent = "Criar minha conta";
+
+    return setAuthStatus(
+      "O Supabase está exigindo confirmação de e-mail. " +
+      "Desative Confirm email em Authentication → Providers → Email.",
+      "error"
     );
-    registerForm.reset();
   }
+
+  await claimGuestAppointments();
+  clearSignupDraft();
+
+  setAuthStatus(
+    "Conta criada com sucesso. Você já está conectado.",
+    "success"
+  );
+
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get("next");
+
+  setTimeout(() => {
+    window.location.href =
+      next === "meus-agendamentos"
+        ? "./meus-agendamentos.html"
+        : "./conta.html";
+  }, 550);
 });
 
 const loginForm = document.getElementById("loginForm");
-loginForm?.addEventListener("submit", async (event) => {
+
+loginForm?.addEventListener("submit", async event => {
   event.preventDefault();
+
   if (!ensureSupabase()) return;
 
   const button = loginForm.querySelector('button[type="submit"]');
-  const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+  const identity = document.getElementById("loginIdentity").value.trim();
   const password = document.getElementById("loginPassword").value;
+
+  if (!identity) {
+    return setAuthStatus("Informe seu WhatsApp ou e-mail.", "error");
+  }
 
   button.disabled = true;
   button.textContent = "Entrando...";
   setAuthStatus("Validando acesso...", "info");
 
-  const { error } = await window.sb.auth.signInWithPassword({ email, password });
+  let email;
+
+  if (identity.includes("@")) {
+    // Barbeiro/admin usa e-mail real.
+    email = identity.toLowerCase();
+  } else {
+    // Cliente informa somente o WhatsApp.
+    email = customerTechnicalEmail(identity);
+
+    if (!email) {
+      button.disabled = false;
+      button.textContent = "Entrar";
+
+      return setAuthStatus(
+        "Informe um WhatsApp válido com DDD.",
+        "error"
+      );
+    }
+  }
+
+  const { error } = await window.sb.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    button.disabled = false;
+    button.textContent = "Entrar";
+
+    return setAuthStatus(
+      "WhatsApp/e-mail ou senha inválidos.",
+      "error"
+    );
+  }
+
+  await claimGuestAppointments();
 
   button.disabled = false;
   button.textContent = "Entrar";
-
-  if (error) {
-    return setAuthStatus("E-mail ou senha inválidos, ou conta ainda não confirmada.", "error");
-  }
-
   setAuthStatus("Login realizado com sucesso.", "success");
+
   setTimeout(() => {
-    window.location.href = "./index.html#agendamento";
-  }, 500);
+    window.location.href = "./meus-agendamentos.html";
+  }, 450);
 });
 
 async function initAccountPage() {
   const accountPage = document.getElementById("accountPage");
   if (!accountPage) return;
+
   if (!ensureSupabase()) return;
 
   const { data: sessionData } = await window.sb.auth.getSession();
@@ -131,18 +288,47 @@ async function initAccountPage() {
 
   const { data: profile, error } = await window.sb
     .from("profiles")
-    .select("full_name, phone, created_at")
+    .select("full_name, phone, role, created_at")
     .eq("id", user.id)
     .single();
 
-  document.getElementById("accountEmail").textContent = user.email || "—";
-  document.getElementById("accountName").textContent =
-    profile?.full_name || user.user_metadata?.full_name || "—";
-  document.getElementById("accountPhone").textContent =
-    profile?.phone || user.user_metadata?.phone || "—";
+  const accountEmail = document.getElementById("accountEmail");
+  const accountName = document.getElementById("accountName");
+  const accountPhone = document.getElementById("accountPhone");
+
+  if (accountEmail) {
+    const realEmail =
+      user.email && !isTechnicalCustomerEmail(user.email)
+        ? user.email
+        : "Não informado";
+
+    accountEmail.textContent = realEmail;
+  }
+
+  if (accountName) {
+    accountName.textContent =
+      profile?.full_name ||
+      user.user_metadata?.full_name ||
+      "—";
+  }
+
+  if (accountPhone) {
+    const storedPhone =
+      profile?.phone ||
+      user.user_metadata?.phone ||
+      "";
+
+    accountPhone.textContent =
+      storedPhone
+        ? formatPhone(String(storedPhone).replace(/^55/, ""))
+        : "—";
+  }
 
   if (error) {
-    setAuthStatus("Conta autenticada, mas não foi possível carregar o perfil.", "error");
+    setAuthStatus(
+      "Conta autenticada, mas não foi possível carregar o perfil.",
+      "error"
+    );
   }
 
   document.getElementById("accountLogout")?.addEventListener("click", async () => {
@@ -152,8 +338,3 @@ async function initAccountPage() {
 }
 
 initAccountPage();
-
-const params = new URLSearchParams(window.location.search);
-if (params.get("confirmed") === "1" && authStatus) {
-  setAuthStatus("E-mail confirmado. Agora você já pode entrar.", "success");
-}

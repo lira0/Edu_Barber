@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=20260926-4" />
 </head>
 <body class="auth-body">
   <main class="auth-layout">
@@ -30,7 +30,7 @@
         
         <span class="eyebrow">PRIMEIRO ACESSO</span>
         <h2>Criar conta</h2>
-        <p class="auth-lead">Cadastre seus dados uma vez e deixe seus próximos agendamentos mais rápidos.</p>
+        <p class="auth-lead">Use apenas seu nome, WhatsApp e uma senha. Você não precisa informar e-mail.</p>
         <form class="auth-form" id="registerForm">
           <div class="field">
             <label for="registerName">Nome completo</label>
@@ -39,10 +39,6 @@
           <div class="field">
             <label for="registerPhone">WhatsApp</label>
             <input id="registerPhone" data-phone-mask type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(85) 99999-9999" required />
-          </div>
-          <div class="field">
-            <label for="registerEmail">E-mail</label>
-            <input id="registerEmail" type="email" autocomplete="email" placeholder="voce@email.com" required />
           </div>
           <div class="field">
             <label for="registerPassword">Senha</label>
@@ -64,6 +60,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./supabase-client.js"></script>
-  <script src="./auth.js"></script>
+  <script src="./auth.js?v=20260926-5"></script>
 </body>
 </html>

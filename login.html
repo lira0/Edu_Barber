@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=20260926-4" />
 </head>
 <body class="auth-body">
   <main class="auth-layout">
@@ -33,8 +33,12 @@
         <p class="auth-lead">Acesse sua conta para agilizar seus próximos agendamentos.</p>
         <form class="auth-form" id="loginForm">
           <div class="field">
-            <label for="loginEmail">E-mail</label>
-            <input id="loginEmail" type="email" autocomplete="email" placeholder="voce@email.com" required />
+            <label for="loginIdentity">WhatsApp ou e-mail</label>
+            <input id="loginIdentity" type="text" autocomplete="username"
+                   placeholder="(85) 99999-9999 ou barbeiro@email.com" required />
+            <small class="field-help">
+              Clientes entram pelo WhatsApp. Barbeiros e administradores usam e-mail.
+            </small>
           </div>
           <div class="field">
             <label for="loginPassword">Senha</label>
@@ -52,6 +56,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./supabase-client.js"></script>
-  <script src="./auth.js"></script>
+  <script src="./auth.js?v=20260926-5"></script>
 </body>
 </html>

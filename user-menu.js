@@ -55,7 +55,7 @@ async function initUserMenu() {
 
     const { data, error } = await window.sb
       .from("profiles")
-      .select("full_name, role")
+      .select("full_name, phone, role")
       .eq("id", user.id)
       .single();
 
@@ -75,7 +75,7 @@ async function initUserMenu() {
       try {
         const { data } = await window.sb
           .from("profiles")
-          .select("full_name, role")
+          .select("full_name, phone, role")
           .eq("id", session.user.id)
           .single();
 
@@ -122,7 +122,32 @@ function renderAuthenticatedMenu(user, profile) {
     "Cliente";
 
   if (name) name.textContent = displayName;
-  if (email) email.textContent = user.email || "";
+  if (email) {
+    const rawPhone =
+      profile?.phone ||
+      user.user_metadata?.phone ||
+      user.phone ||
+      "";
+
+    const phoneDigits = String(rawPhone).replace(/\D/g, "").replace(/^55/, "");
+    let phoneLabel = "";
+
+    if (phoneDigits.length === 11) {
+      phoneLabel =
+        `(${phoneDigits.slice(0,2)}) ${phoneDigits.slice(2,7)}-${phoneDigits.slice(7)}`;
+    } else if (phoneDigits.length === 10) {
+      phoneLabel =
+        `(${phoneDigits.slice(0,2)}) ${phoneDigits.slice(2,6)}-${phoneDigits.slice(6)}`;
+    }
+
+    const technicalCustomerEmail =
+      String(user.email || "").toLowerCase().endsWith("@barbearia.invalid");
+
+    email.textContent =
+      (!technicalCustomerEmail && user.email)
+        ? user.email
+        : (phoneLabel || "Cliente");
+  }
 
   document.querySelectorAll(".drawer-auth-only").forEach(el => {
     el.classList.remove("hidden");

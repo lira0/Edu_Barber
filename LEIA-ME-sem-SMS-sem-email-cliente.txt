@@ -1,0 +1,31 @@
+PATCH — CLIENTE SEM E-MAIL, SEM SMS, SEM OTP
+
+NÃO HABILITE o provider Phone no Supabase.
+
+Configuração correta:
+
+1. Supabase -> Authentication -> Providers -> Email
+   - Email provider: ON
+   - Confirm email: OFF
+
+2. Supabase -> Authentication -> Providers -> Phone
+   - Phone provider: OFF
+
+Clientes:
+- informam Nome + WhatsApp + Senha
+- o site cria internamente um e-mail técnico:
+  cliente.55DDDNUMERO@barbearia.invalid
+- esse e-mail nunca é mostrado ao cliente
+- nenhum e-mail é enviado
+- nenhum SMS é enviado
+- nenhum OTP é usado
+
+Login de cliente:
+- WhatsApp + senha
+- o frontend transforma o WhatsApp no mesmo identificador técnico
+
+Barbeiros/admin:
+- continuam usando e-mail real + senha
+
+O SQL do patch anterior de limite de 1 agendamento/dia e
+claim_my_guest_appointments continua válido.
