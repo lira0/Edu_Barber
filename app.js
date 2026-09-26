@@ -368,7 +368,6 @@ bookingForm.addEventListener("submit", async event => {
 
   const name = document.getElementById("customerName").value.trim();
   const phone = normalizePhone(customerPhone.value);
-  const consent = document.getElementById("reminderConsent").checked;
 
   if (name.length < 2) {
     showToast("Informe seu nome.", true);
@@ -377,11 +376,6 @@ bookingForm.addEventListener("submit", async event => {
 
   if (phone.length < 10 || phone.length > 11) {
     showToast("Informe um número de WhatsApp válido com DDD.", true);
-    return;
-  }
-
-  if (!consent) {
-    showToast("Autorize o envio de mensagens sobre o agendamento.", true);
     return;
   }
 
