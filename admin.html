@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Agenda | Barbearia Prime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="admin-body">
+  <div class="admin-shell" id="adminApp">
+    <aside class="admin-sidebar">
+      <a class="brand" href="./admin.html">
+        <span class="brand-mark">BP</span>
+        <span><strong>Barbearia Prime</strong><small>Painel administrativo</small></span>
+      </a>
+
+      <nav class="admin-menu">
+        <button class="admin-menu-item active" type="button">📅 Agenda</button>
+        <a class="admin-menu-item" href="./index.html" target="_blank">🌐 Ver site</a>
+      </nav>
+
+      <div class="admin-user">
+        <span>Logado como</span>
+        <strong id="adminUserName">Carregando...</strong>
+        <small id="adminUserRole">—</small>
+        <button id="adminLogout" type="button">Sair</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div>
+          <span class="eyebrow">AGENDA DA BARBEARIA</span>
+          <h1>Atendimentos</h1>
+          <p id="adminSubtitle">Carregando sua agenda...</p>
+        </div>
+        <button class="secondary-btn" id="refreshAppointments" type="button">Atualizar</button>
+      </header>
+
+      <section class="admin-toolbar">
+        <div class="admin-filter">
+          <label for="adminDate">Data</label>
+          <input id="adminDate" type="date" />
+        </div>
+
+        <div class="admin-filter hidden" id="adminBarberFilterWrap">
+          <label for="adminBarberFilter">Barbeiro</label>
+          <select id="adminBarberFilter"></select>
+        </div>
+
+        <div class="admin-filter">
+          <label for="adminStatusFilter">Status</label>
+          <select id="adminStatusFilter">
+            <option value="all">Todos</option>
+            <option value="confirmed">Confirmados</option>
+            <option value="pending">Pendentes</option>
+            <option value="completed">Concluídos</option>
+            <option value="cancelled">Cancelados</option>
+            <option value="no_show">Não compareceu</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="admin-stats">
+        <article>
+          <span>Agendados</span>
+          <strong id="statTotal">0</strong>
+        </article>
+        <article>
+          <span>Confirmados</span>
+          <strong id="statConfirmed">0</strong>
+        </article>
+        <article>
+          <span>Concluídos</span>
+          <strong id="statCompleted">0</strong>
+        </article>
+        <article>
+          <span>Cancelados</span>
+          <strong id="statCancelled">0</strong>
+        </article>
+      </section>
+
+      <section class="admin-agenda-card">
+        <div class="admin-list-heading">
+          <div>
+            <h2 id="agendaDateTitle">Agenda</h2>
+            <span id="agendaCount">0 clientes</span>
+          </div>
+        </div>
+
+        <div id="adminStatus" class="admin-inline-status" aria-live="polite"></div>
+        <div id="appointmentsList" class="appointments-list">
+          <div class="empty-state">Carregando...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./admin.js"></script>
+</body>
+</html>

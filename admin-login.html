@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Painel do barbeiro | Barbearia Prime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-layout">
+    <section class="auth-brand-panel admin-login-brand">
+      <a class="brand" href="./index.html">
+        <span class="brand-mark">BP</span>
+        <span>
+          <strong>Barbearia Prime</strong>
+          <small>Área administrativa</small>
+        </span>
+      </a>
+
+      <div>
+        <span class="eyebrow">PAINEL DO BARBEIRO</span>
+        <h1>Sua agenda em um só lugar.</h1>
+        <p>
+          Visualize clientes, horários e status de atendimento.
+          O acesso é restrito às contas autorizadas como barbeiro ou administrador.
+        </p>
+      </div>
+
+      <a class="auth-back" href="./index.html">← Voltar para o site</a>
+    </section>
+
+    <section class="auth-form-panel">
+      <div class="auth-card">
+        <span class="eyebrow">ACESSO RESTRITO</span>
+        <h2>Entrar no painel</h2>
+        <p class="auth-lead">Use o usuário da barbearia e sua senha.</p>
+
+        <form class="auth-form" id="adminLoginForm">
+          <div class="field">
+            <label for="adminEmail">Usuário / e-mail</label>
+            <input id="adminEmail" type="email" autocomplete="username" placeholder="barbeiro@email.com" required />
+          </div>
+
+          <div class="field">
+            <label for="adminPassword">Senha</label>
+            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="Sua senha" required />
+          </div>
+
+          <button class="primary-btn full" type="submit">Entrar no painel</button>
+        </form>
+
+        <div id="adminLoginStatus" class="auth-status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./admin.js"></script>
+</body>
+</html>

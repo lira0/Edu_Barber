@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="Agende seu horário na barbearia de forma rápida e simples." />
+  <title>Barbearia Prime | Agendamento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="Barbearia Prime">
+      <span class="brand-mark">BP</span>
+      <span><strong>Barbearia Prime</strong><small>Estilo, precisão e atitude.</small></span>
+    </a>
+    <nav class="nav">
+      <a href="#inicio">Início</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#agendamento">Agendamento</a>
+      <a href="./login.html" id="navLogin">Entrar</a>
+      <a href="./cadastro.html" id="navRegister">Criar conta</a>
+      <a href="./conta.html" id="navAccount" class="hidden">Minha conta</a>
+      <a href="./admin-login.html" class="admin-nav-link">Painel do barbeiro</a>
+      <button class="nav-logout hidden" id="navLogout" type="button">Sair</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="hero-content">
+        <span class="eyebrow">BARBEARIA • CORTE • BARBA</span>
+        <h1>Seu estilo começa<br><span>aqui.</span></h1>
+        <p>Atendimento com hora marcada, ambiente confortável e cuidado em cada detalhe. Escolha seu horário em poucos segundos.</p>
+        <div class="hero-actions">
+          <button class="primary-btn" id="heroScheduleBtn">Agendar seu horário</button>
+          <a class="secondary-btn" href="#servicos">Conhecer serviços</a>
+        </div>
+        <div class="hero-badges">
+          <div><strong>+500</strong><span>atendimentos</span></div>
+          <div><strong>5★</strong><span>experiência</span></div>
+          <div><strong>100%</strong><span>hora marcada</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="services section" id="servicos">
+      <div class="section-heading">
+        <span class="eyebrow">NOSSOS SERVIÇOS</span>
+        <h2>Escolha seu cuidado</h2>
+        <p>Valores e durações são demonstrativos e podem ser alterados facilmente.</p>
+      </div>
+      <div class="service-grid">
+        <article class="service-card">
+          <div class="service-icon">✂</div>
+          <h3>Corte</h3>
+          <p>Acabamento preciso e estilo alinhado ao seu perfil.</p>
+          <div class="service-meta"><span>30 min</span><strong>R$ 35</strong></div>
+        </article>
+        <article class="service-card featured">
+          <div class="popular-badge">Mais pedido</div>
+          <div class="service-icon">★</div>
+          <h3>Corte + Barba</h3>
+          <p>Experiência completa para renovar visual e barba.</p>
+          <div class="service-meta"><span>60 min</span><strong>R$ 55</strong></div>
+        </article>
+        <article class="service-card">
+          <div class="service-icon">♛</div>
+          <h3>Barba</h3>
+          <p>Modelagem, alinhamento e acabamento profissional.</p>
+          <div class="service-meta"><span>30 min</span><strong>R$ 25</strong></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="booking section" id="agendamento">
+      <div class="booking-shell">
+        <div class="section-heading booking-heading">
+          <span class="eyebrow">AGENDE AGORA</span>
+          <h2>Escolha seu horário</h2>
+          <p>Selecione o dia e depois um dos horários disponíveis.</p>
+        </div>
+        <div class="booking-status" id="bookingStatus" aria-live="polite"></div>
+
+        <div class="step">
+          <div class="step-title"><span>1</span><div><strong>Escolha o dia</strong><small>Mostramos os próximos dias disponíveis.</small></div></div>
+          <div class="date-strip" id="dateStrip"></div>
+        </div>
+
+        <div class="step">
+          <div class="step-title"><span>2</span><div><strong>Horários disponíveis</strong><small id="selectedDateLabel">Selecione uma data acima.</small></div></div>
+          <div class="time-grid" id="timeGrid"><div class="empty-state">Escolha um dia para visualizar os horários.</div></div>
+        </div>
+
+        <div class="step client-step hidden" id="clientStep">
+          <div class="step-title"><span>3</span><div><strong>Seus dados</strong><small>Precisamos apenas do seu nome e WhatsApp.</small></div></div>
+          <div class="selected-slot" id="selectedSlotSummary"></div>
+          <form id="bookingForm" novalidate>
+            <div class="field">
+              <label for="customerName">Nome</label>
+              <input id="customerName" name="customerName" type="text" autocomplete="name" placeholder="Ex.: Carlos Silva" maxlength="80" required />
+            </div>
+            <div class="field">
+              <label for="customerPhone">WhatsApp</label>
+              <input id="customerPhone" name="customerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(85) 99999-9999" maxlength="16" required />
+            </div>
+            <label class="consent"><input id="reminderConsent" type="checkbox" required /><span>Concordo em receber mensagens sobre este agendamento pelo WhatsApp.</span></label>
+            <button class="primary-btn full" type="submit" id="confirmBookingBtn">Confirmar agendamento</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="about section">
+      <div class="about-card">
+        <span class="eyebrow">BARBEARIA PRIME</span>
+        <h2>Mais que um corte.</h2>
+        <p>Um espaço pensado para quem valoriza pontualidade, atendimento personalizado e um visual bem feito. Agende online e chegue no horário certo.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>Barbearia Prime</strong><span>© <span id="year"></span> • Todos os direitos reservados.</span></div>
+    <a href="#agendamento">Agendar horário</a>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./site-auth.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Cadastro | Barbearia Prime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-layout">
+    <section class="auth-brand-panel">
+      <a class="brand" href="./index.html">
+        <span class="brand-mark">BP</span>
+        <span><strong>Barbearia Prime</strong><small>Estilo, precisão e atitude.</small></span>
+      </a>
+      <div>
+        <span class="eyebrow">ÁREA DO CLIENTE</span>
+        <h1>Seu próximo corte começa aqui.</h1>
+        <p>Crie sua conta para manter seus dados salvos e facilitar novos horários.</p>
+      </div>
+      <a class="auth-back" href="./index.html">← Voltar para a barbearia</a>
+    </section>
+
+    <section class="auth-form-panel">
+      <div class="auth-card">
+        
+        <span class="eyebrow">PRIMEIRO ACESSO</span>
+        <h2>Criar conta</h2>
+        <p class="auth-lead">Cadastre seus dados uma vez e deixe seus próximos agendamentos mais rápidos.</p>
+        <form class="auth-form" id="registerForm">
+          <div class="field">
+            <label for="registerName">Nome completo</label>
+            <input id="registerName" type="text" autocomplete="name" maxlength="80" placeholder="Carlos Silva" required />
+          </div>
+          <div class="field">
+            <label for="registerPhone">WhatsApp</label>
+            <input id="registerPhone" data-phone-mask type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(85) 99999-9999" required />
+          </div>
+          <div class="field">
+            <label for="registerEmail">E-mail</label>
+            <input id="registerEmail" type="email" autocomplete="email" placeholder="voce@email.com" required />
+          </div>
+          <div class="field">
+            <label for="registerPassword">Senha</label>
+            <input id="registerPassword" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo de 6 caracteres" required />
+          </div>
+          <div class="field">
+            <label for="registerConfirmPassword">Confirmar senha</label>
+            <input id="registerConfirmPassword" type="password" autocomplete="new-password" minlength="6" placeholder="Repita sua senha" required />
+          </div>
+          <button class="primary-btn full" type="submit">Criar minha conta</button>
+        </form>
+        <p class="auth-switch">Já tem uma conta? <a href="./login.html">Entrar</a></p>
+
+        <div id="authStatus" class="auth-status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./auth.js"></script>
+</body>
+</html>

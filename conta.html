@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Minha conta | Barbearia Prime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="auth-body">
+  <main class="account-wrap" id="accountPage">
+    <a class="brand" href="./index.html">
+      <span class="brand-mark">BP</span>
+      <span><strong>Barbearia Prime</strong><small>Minha conta</small></span>
+    </a>
+
+    <section class="account-card">
+      <span class="eyebrow">MINHA CONTA</span>
+      <h1>Seus dados</h1>
+      <div class="account-data">
+        <div><span>Nome</span><strong id="accountName">Carregando...</strong></div>
+        <div><span>E-mail</span><strong id="accountEmail">Carregando...</strong></div>
+        <div><span>WhatsApp</span><strong id="accountPhone">Carregando...</strong></div>
+      </div>
+      <div id="authStatus" class="auth-status" aria-live="polite"></div>
+      <div class="account-actions">
+        <a class="primary-btn" href="./index.html#agendamento">Agendar horário</a>
+        <button class="secondary-btn" id="accountLogout" type="button">Sair</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./auth.js"></script>
+</body>
+</html>

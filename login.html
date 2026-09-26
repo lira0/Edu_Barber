@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Login | Barbearia Prime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-layout">
+    <section class="auth-brand-panel">
+      <a class="brand" href="./index.html">
+        <span class="brand-mark">BP</span>
+        <span><strong>Barbearia Prime</strong><small>Estilo, precisão e atitude.</small></span>
+      </a>
+      <div>
+        <span class="eyebrow">ÁREA DO CLIENTE</span>
+        <h1>Sua cadeira está esperando.</h1>
+        <p>Entre para acessar seus dados e tornar o agendamento ainda mais rápido.</p>
+      </div>
+      <a class="auth-back" href="./index.html">← Voltar para a barbearia</a>
+    </section>
+
+    <section class="auth-form-panel">
+      <div class="auth-card">
+        
+        <span class="eyebrow">BEM-VINDO DE VOLTA</span>
+        <h2>Entrar</h2>
+        <p class="auth-lead">Acesse sua conta para agilizar seus próximos agendamentos.</p>
+        <form class="auth-form" id="loginForm">
+          <div class="field">
+            <label for="loginEmail">E-mail</label>
+            <input id="loginEmail" type="email" autocomplete="email" placeholder="voce@email.com" required />
+          </div>
+          <div class="field">
+            <label for="loginPassword">Senha</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha" required />
+          </div>
+          <button class="primary-btn full" type="submit">Entrar</button>
+        </form>
+        <p class="auth-switch">Ainda não tem conta? <a href="./cadastro.html">Criar conta</a></p>
+
+        <div id="authStatus" class="auth-status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./auth.js"></script>
+</body>
+</html>
