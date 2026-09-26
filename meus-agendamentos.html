@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Meus agendamentos | Barbearia Prime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="my-bookings-body">
+  <main class="my-bookings-wrap">
+    <a class="brand" href="./index.html">
+      <span class="brand-mark">BP</span>
+      <span><strong>Barbearia Prime</strong><small>Área do cliente</small></span>
+    </a>
+
+    <header class="my-bookings-header">
+      <span class="eyebrow">MINHA AGENDA</span>
+      <h1>Meus agendamentos</h1>
+      <p>Acompanhe os horários reservados usando sua conta.</p>
+    </header>
+
+    <div id="myBookingsStatus"></div>
+
+    <section id="upcomingSection">
+      <h2 class="my-bookings-section-title">Próximos</h2>
+      <div class="booking-list" id="upcomingBookings">
+        <div class="empty-state">Carregando...</div>
+      </div>
+    </section>
+
+    <section id="pastSection">
+      <h2 class="my-bookings-section-title">Histórico</h2>
+      <div class="booking-list" id="pastBookings"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./supabase-client.js"></script>
+  <script src="./user-menu.js"></script>
+  <script src="./meus-agendamentos.js"></script>
+</body>
+</html>

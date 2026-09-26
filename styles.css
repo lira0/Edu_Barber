@@ -391,3 +391,138 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;fle
   .appointment-status-wrap{grid-column:2}
   .appointment-actions{grid-column:1/-1;justify-content:flex-start}
 }
+
+
+/* ---------- Menu lateral do usuário ---------- */
+.user-menu-trigger{
+  position:fixed;
+  right:18px;
+  top:88px;
+  z-index:120;
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(215,170,88,.34);
+  border-radius:15px;
+  color:var(--gold-2);
+  background:rgba(14,14,14,.94);
+  box-shadow:0 14px 40px rgba(0,0,0,.35);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  font-size:20px;
+}
+.user-menu-trigger:hover{border-color:var(--gold)}
+.user-drawer-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:140;
+  background:rgba(0,0,0,.58);
+  opacity:0;
+  pointer-events:none;
+  transition:.22s ease;
+}
+.user-drawer-backdrop.open{opacity:1;pointer-events:auto}
+.user-drawer{
+  position:fixed;
+  top:0;
+  right:0;
+  z-index:150;
+  width:min(88vw,350px);
+  height:100svh;
+  padding:26px 20px;
+  display:flex;
+  flex-direction:column;
+  border-left:1px solid var(--line);
+  background:#0d0d0d;
+  transform:translateX(105%);
+  transition:.25s ease;
+  box-shadow:-24px 0 70px rgba(0,0,0,.45);
+}
+.user-drawer.open{transform:translateX(0)}
+.user-drawer-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--line);
+}
+.user-drawer-person strong,.user-drawer-person span{display:block}
+.user-drawer-person strong{font-size:14px}
+.user-drawer-person span{margin-top:4px;color:var(--muted);font-size:11px}
+.user-drawer-close{
+  width:38px;height:38px;border:1px solid var(--line);border-radius:11px;
+  color:#ddd;background:#141414;cursor:pointer;font-size:19px;
+}
+.user-drawer-nav{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin-top:22px;
+}
+.user-drawer-nav a,.user-drawer-nav button{
+  width:100%;
+  min-height:48px;
+  padding:0 14px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  border:1px solid transparent;
+  border-radius:13px;
+  color:#d7d0c5;
+  background:transparent;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.user-drawer-nav a:hover,.user-drawer-nav button:hover{
+  border-color:var(--line);
+  background:#151515;
+}
+.user-drawer-nav .admin-only{
+  color:var(--gold-2);
+  border-color:rgba(215,170,88,.18);
+  background:rgba(215,170,88,.05);
+}
+.user-drawer-footer{margin-top:auto;padding-top:18px;border-top:1px solid var(--line)}
+.user-drawer-footer button{color:#efa8a8}
+
+/* ---------- Meus agendamentos ---------- */
+.my-bookings-body{min-height:100svh;background:#090909}
+.my-bookings-wrap{width:min(100%,1050px);margin:0 auto;padding:42px 18px 80px}
+.my-bookings-header{margin-top:48px;margin-bottom:24px}
+.my-bookings-header h1{
+  margin:10px 0 8px;
+  font-family:"Bebas Neue",sans-serif;
+  font-size:clamp(48px,7vw,76px);
+  font-weight:400;
+}
+.my-bookings-header p{margin:0;color:var(--muted)}
+.booking-list{display:flex;flex-direction:column;gap:12px}
+.my-booking-card{
+  display:grid;
+  grid-template-columns:110px minmax(0,1fr) auto;
+  gap:18px;
+  align-items:center;
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:linear-gradient(180deg,#141414,#0f0f0f);
+}
+.my-booking-time strong{display:block;color:var(--gold-2);font-size:25px}
+.my-booking-time span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.my-booking-info strong,.my-booking-info span,.my-booking-info small{display:block}
+.my-booking-info strong{font-size:16px}
+.my-booking-info span{margin-top:5px;color:#bbb4a9;font-size:13px}
+.my-booking-info small{margin-top:5px;color:var(--muted);font-size:11px}
+.my-bookings-section-title{margin:30px 0 12px;font-size:18px}
+.login-required-card{
+  padding:28px;border:1px solid var(--line);border-radius:20px;background:#101010;text-align:center;
+}
+.login-required-card p{color:var(--muted);line-height:1.6}
+@media(max-width:650px){
+  .user-menu-trigger{top:auto;bottom:20px;right:16px}
+  .my-booking-card{grid-template-columns:80px minmax(0,1fr)}
+  .my-booking-card .status-pill{grid-column:2;justify-self:start}
+}
