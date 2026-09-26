@@ -687,3 +687,16 @@ body.drawer-open{
     margin-top:18px;
   }
 }
+
+
+/* ---------- Menu visitante v3 ---------- */
+.user-drawer-nav .drawer-register{
+  border-color:rgba(215,170,88,.30);
+  background:linear-gradient(135deg,rgba(241,211,138,.10),rgba(215,170,88,.05));
+  color:var(--gold-2);
+}
+
+.user-drawer-nav .drawer-register:hover{
+  border-color:rgba(215,170,88,.60);
+  background:rgba(215,170,88,.11);
+}

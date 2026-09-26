@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260926-2" />
+  <link rel="stylesheet" href="./styles.css?v=20260926-3" />
 </head>
 <body class="auth-body">
   <header class="topbar customer-topbar">
@@ -16,7 +16,7 @@
       <span class="brand-mark">BP</span>
       <span><strong>Barbearia Prime</strong><small>Minha conta</small></span>
     </a>
-    <button class="topbar-menu-button hidden" id="userMenuTrigger" type="button" aria-label="Abrir menu">☰</button>
+    <button class="topbar-menu-button" id="userMenuTrigger" type="button" aria-label="Abrir menu">☰</button>
   </header>
 
   <main class="account-wrap" id="accountPage">
@@ -41,8 +41,8 @@
   <aside class="user-drawer" id="userDrawer" aria-hidden="true">
     <div class="user-drawer-header">
       <div class="user-drawer-person">
-        <strong id="userDrawerName">Minha conta</strong>
-        <span id="userDrawerEmail"></span>
+        <strong id="userDrawerName">Visitante</strong>
+        <span id="userDrawerEmail">Entre para acompanhar seus horários</span>
       </div>
       <button class="user-drawer-close" id="userDrawerClose" type="button" aria-label="Fechar menu">×</button>
     </div>
@@ -50,13 +50,32 @@
     <nav class="user-drawer-nav">
       <a href="./index.html">⌂ <span>Início</span></a>
       <a href="./index.html#agendamento">✂ <span>Agendar horário</span></a>
-      <a href="./meus-agendamentos.html">📅 <span>Meus agendamentos</span></a>
-      <a href="./conta.html">👤 <span>Minha conta</span></a>
-      <a id="userDrawerAdmin" class="admin-only hidden" href="./admin.html">💈 <span>Painel administrativo</span></a>
+
+      <a id="drawerMyBookings" class="drawer-auth-only hidden" href="./meus-agendamentos.html">
+        📅 <span>Meus agendamentos</span>
+      </a>
+
+      <a id="drawerMyAccount" class="drawer-auth-only hidden" href="./conta.html">
+        👤 <span>Minha conta</span>
+      </a>
+
+      <a id="userDrawerAdmin" class="admin-only hidden" href="./admin.html">
+        💈 <span>Painel administrativo</span>
+      </a>
+
+      <a id="drawerLogin" class="drawer-guest-only" href="./login.html">
+        🔐 <span>Entrar</span>
+      </a>
+
+      <a id="drawerRegister" class="drawer-guest-only drawer-register" href="./cadastro.html">
+        ＋ <span>Criar conta</span>
+      </a>
     </nav>
 
     <div class="user-drawer-footer user-drawer-nav">
-      <button id="drawerLogout" type="button">↪ <span>Sair</span></button>
+      <button id="drawerLogout" class="drawer-auth-only hidden" type="button">
+        ↪ <span>Sair</span>
+      </button>
     </div>
   </aside>
 
@@ -64,6 +83,6 @@
   <script src="./config.js?v=20260926-2"></script>
   <script src="./supabase-client.js?v=20260926-2"></script>
   <script src="./auth.js?v=20260926-2"></script>
-  <script src="./user-menu.js?v=20260926-2"></script>
+  <script src="./user-menu.js?v=20260926-3"></script>
 </body>
 </html>

@@ -1,55 +1,18 @@
 document.addEventListener("DOMContentLoaded", initUserMenu);
 
 async function initUserMenu() {
-  if (!window.sb) return;
-
-  const { data: sessionData } = await window.sb.auth.getSession();
-  const user = sessionData.session?.user;
-  if (!user) return;
-
-  let profile = null;
-
-  try {
-    const { data, error } = await window.sb
-      .from("profiles")
-      .select("full_name, role")
-      .eq("id", user.id)
-      .single();
-
-    if (!error) profile = data;
-  } catch (error) {
-    console.warn("Não foi possível carregar o perfil do menu:", error);
-  }
-
-  const canAdmin = ["barber", "admin"].includes(profile?.role);
-  const name =
-    profile?.full_name ||
-    user.user_metadata?.full_name ||
-    user.email ||
-    "Cliente";
-
   const trigger = document.getElementById("userMenuTrigger");
   const backdrop = document.getElementById("userDrawerBackdrop");
   const drawer = document.getElementById("userDrawer");
   const closeButton = document.getElementById("userDrawerClose");
-  const logoutButton = document.getElementById("drawerLogout");
-  const adminLink = document.getElementById("userDrawerAdmin");
-  const drawerName = document.getElementById("userDrawerName");
-  const drawerEmail = document.getElementById("userDrawerEmail");
 
   if (!trigger || !drawer || !backdrop) {
     console.error("Estrutura do menu lateral não encontrada no HTML.");
     return;
   }
 
+  // O menu existe para todos, inclusive visitantes.
   trigger.classList.remove("hidden");
-
-  if (drawerName) drawerName.textContent = name;
-  if (drawerEmail) drawerEmail.textContent = user.email || "";
-
-  if (adminLink) {
-    adminLink.classList.toggle("hidden", !canAdmin);
-  }
 
   const openMenu = () => {
     backdrop.classList.add("open");
@@ -73,9 +36,119 @@ async function initUserMenu() {
     if (event.key === "Escape") closeMenu();
   });
 
-  logoutButton?.addEventListener("click", async () => {
-    logoutButton.disabled = true;
-    await window.sb.auth.signOut();
-    window.location.href = "./index.html";
+  // Estado padrão: visitante.
+  renderGuestMenu();
+
+  // Se o Supabase não estiver disponível, o menu público continua funcionando.
+  if (!window.sb) return;
+
+  try {
+    const { data: sessionData } = await window.sb.auth.getSession();
+    const user = sessionData.session?.user;
+
+    if (!user) {
+      renderGuestMenu();
+      return;
+    }
+
+    let profile = null;
+
+    const { data, error } = await window.sb
+      .from("profiles")
+      .select("full_name, role")
+      .eq("id", user.id)
+      .single();
+
+    if (!error) profile = data;
+
+    renderAuthenticatedMenu(user, profile);
+
+    // Mantém o menu sincronizado caso login/logout aconteça sem recarregar.
+    window.sb.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) {
+        renderGuestMenu();
+        return;
+      }
+
+      let nextProfile = null;
+
+      try {
+        const { data } = await window.sb
+          .from("profiles")
+          .select("full_name, role")
+          .eq("id", session.user.id)
+          .single();
+
+        nextProfile = data;
+      } catch (_) {}
+
+      renderAuthenticatedMenu(session.user, nextProfile);
+    });
+  } catch (error) {
+    console.warn("Não foi possível consultar a sessão do Supabase:", error);
+    renderGuestMenu();
+  }
+}
+
+function renderGuestMenu() {
+  const name = document.getElementById("userDrawerName");
+  const email = document.getElementById("userDrawerEmail");
+  const admin = document.getElementById("userDrawerAdmin");
+
+  if (name) name.textContent = "Visitante";
+  if (email) email.textContent = "Entre para acompanhar seus horários";
+
+  document.querySelectorAll(".drawer-auth-only").forEach(el => {
+    el.classList.add("hidden");
   });
+
+  document.querySelectorAll(".drawer-guest-only").forEach(el => {
+    el.classList.remove("hidden");
+  });
+
+  admin?.classList.add("hidden");
+}
+
+function renderAuthenticatedMenu(user, profile) {
+  const name = document.getElementById("userDrawerName");
+  const email = document.getElementById("userDrawerEmail");
+  const admin = document.getElementById("userDrawerAdmin");
+  const logout = document.getElementById("drawerLogout");
+
+  const displayName =
+    profile?.full_name ||
+    user.user_metadata?.full_name ||
+    user.email ||
+    "Cliente";
+
+  if (name) name.textContent = displayName;
+  if (email) email.textContent = user.email || "";
+
+  document.querySelectorAll(".drawer-auth-only").forEach(el => {
+    el.classList.remove("hidden");
+  });
+
+  document.querySelectorAll(".drawer-guest-only").forEach(el => {
+    el.classList.add("hidden");
+  });
+
+  const canAdmin = ["barber", "admin"].includes(profile?.role);
+  admin?.classList.toggle("hidden", !canAdmin);
+
+  if (logout && !logout.dataset.bound) {
+    logout.dataset.bound = "1";
+
+    logout.addEventListener("click", async () => {
+      if (!window.sb) return;
+
+      logout.disabled = true;
+
+      try {
+        await window.sb.auth.signOut();
+        window.location.href = "./index.html";
+      } finally {
+        logout.disabled = false;
+      }
+    });
+  }
 }
