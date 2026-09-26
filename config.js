@@ -19,8 +19,8 @@ window.BARBERSHOP_CONFIG = {
     Cole aqui os dados do seu projeto.
     Use SOMENTE a Publishable Key no GitHub Pages.
   */
-  SUPABASE_URL: "COLE_AQUI_A_URL_DO_PROJETO",
-  SUPABASE_PUBLISHABLE_KEY: "COLE_AQUI_A_PUBLISHABLE_KEY",
+  SUPABASE_URL: "https://ccxuaakobqgshfrepxsw.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_0MNCbLoBr1ex2xR7xYaVcg_Y6h8sQ8e",
 
   // Auth/perfis já usam Supabase.
   // Agendamentos serão migrados ao Supabase na próxima etapa.
