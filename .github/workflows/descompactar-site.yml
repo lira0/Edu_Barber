@@ -1,0 +1,82 @@
+name: Descompactar site no repositorio
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "*.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Localizar arquivo ZIP
+        id: find_zip
+        shell: bash
+        run: |
+          set -e
+
+          ZIP_FILE="$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)"
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Nenhum arquivo .zip encontrado na raiz do repositorio."
+            exit 1
+          fi
+
+          echo "ZIP encontrado: $ZIP_FILE"
+          echo "zip_file=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Descompactar ZIP na raiz
+        shell: bash
+        run: |
+          set -e
+
+          ZIP_FILE="${{ steps.find_zip.outputs.zip_file }}"
+
+          echo "Descompactando $ZIP_FILE..."
+          unzip -o "$ZIP_FILE" -d extracted_temp
+
+          echo "Copiando arquivos para a raiz do repositorio..."
+
+          # Se o ZIP tiver uma pasta principal, copia o conteudo dela.
+          ROOT_ITEMS="$(find extracted_temp -mindepth 1 -maxdepth 1 | wc -l)"
+
+          if [ "$ROOT_ITEMS" -eq 1 ] && [ -d "$(find extracted_temp -mindepth 1 -maxdepth 1 | head -n 1)" ]; then
+            INNER_DIR="$(find extracted_temp -mindepth 1 -maxdepth 1 | head -n 1)"
+            cp -a "$INNER_DIR"/. .
+          else
+            cp -a extracted_temp/. .
+          fi
+
+          rm -rf extracted_temp
+
+      - name: Mostrar arquivos extraidos
+        shell: bash
+        run: |
+          echo "Conteudo atual da raiz:"
+          ls -la
+
+      - name: Commitar arquivos descompactados
+        shell: bash
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteracao para commitar."
+            exit 0
+          fi
+
+          git commit -m "Descompactar arquivos do site"
+          git push
