@@ -4,19 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0a0a0a" />
-  <title>Agenda | Barbearia Prime</title>
+  <title>Agenda | Freitas Barbearia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260926-7" />
+  <link rel="stylesheet" href="./styles.css?v=20260927-10" />
 </head>
 <body class="admin-body">
   <div class="admin-shell" id="adminApp">
     <aside class="admin-sidebar">
       <a class="brand" href="./admin.html">
-        <span class="brand-mark">BP</span>
+        <span class="brand-mark">F</span>
         <span>
-          <strong>Barbearia Prime</strong>
+          <strong>Freitas Barbearia</strong>
           <small>Painel administrativo</small>
         </span>
       </a>
@@ -43,6 +43,53 @@
         </div>
         <button class="secondary-btn" id="refreshAppointments" type="button">Atualizar</button>
       </header>
+
+      
+      <section class="admin-opening-settings">
+        <div class="opening-settings-head">
+          <div>
+            <span class="eyebrow">FUNCIONAMENTO</span>
+            <h2>Barbearia aberta ou fechada</h2>
+            <p>
+              Configure os dias e horários de funcionamento. O status público
+              será calculado automaticamente, salvo quando houver uma substituição manual.
+            </p>
+          </div>
+
+          <div class="shop-mode-control">
+            <label for="shopMode">Status</label>
+            <select id="shopMode">
+              <option value="automatic">Automático pelo horário</option>
+              <option value="open">Forçar aberta</option>
+              <option value="closed">Forçar fechada</option>
+            </select>
+            <button class="secondary-btn" id="saveShopMode" type="button">
+              Salvar status
+            </button>
+          </div>
+        </div>
+
+        <div class="opening-days" id="openingDays"></div>
+
+        <div class="opening-settings-footer">
+          <button class="primary-btn" id="saveOpeningHours" type="button">
+            Salvar dias e horários
+          </button>
+          <small id="openingHoursStatus"></small>
+        </div>
+
+        <div class="schedule-permissions hidden" id="schedulePermissions">
+          <div>
+            <span class="eyebrow">PERMISSÕES</span>
+            <h3>Quem pode alterar os horários?</h3>
+            <p>
+              Administradores sempre podem editar. Selecione abaixo quais barbeiros
+              também poderão alterar o funcionamento da barbearia.
+            </p>
+          </div>
+          <div id="scheduleEditorsList" class="schedule-editors-list"></div>
+        </div>
+      </section>
 
       <section class="admin-reminder-settings">
         <div class="reminder-settings-copy">
@@ -140,7 +187,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./supabase-client.js"></script>
-  <script src="./admin.js?v=20260926-7"></script>
+  <script src="./supabase-client.js?v=20260927-10"></script>
+  <script src="./admin.js?v=20260927-10"></script>
 </body>
 </html>

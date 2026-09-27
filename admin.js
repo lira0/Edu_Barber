@@ -89,6 +89,60 @@ async function getCurrentProfile() {
   return { user, profile };
 }
 
+
+/* =========================================================
+   LOGOUT DO PAINEL
+   Registra o botão imediatamente, antes de qualquer RPC.
+   Assim o Sair funciona mesmo se a agenda falhar ao carregar.
+   ========================================================= */
+
+function bindAdminLogout() {
+  const logoutButton = document.getElementById("adminLogout");
+
+  if (!logoutButton || logoutButton.dataset.logoutBound === "1") {
+    return;
+  }
+
+  logoutButton.dataset.logoutBound = "1";
+
+  logoutButton.addEventListener("click", async event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (logoutButton.disabled) return;
+
+    logoutButton.disabled = true;
+    const originalText = logoutButton.textContent;
+    logoutButton.textContent = "Saindo...";
+
+    try {
+      if (window.sb) {
+        // Limpa a sessão deste navegador/dispositivo.
+        const { error } = await window.sb.auth.signOut({
+          scope: "local"
+        });
+
+        if (error) {
+          console.warn("Falha ao encerrar sessão no Supabase:", error);
+        }
+      }
+    } catch (error) {
+      console.warn("Erro durante logout:", error);
+    } finally {
+      // O redirecionamento ocorre mesmo se a rede/Supabase falhar.
+      window.location.replace("./admin-login.html");
+    }
+
+    // Fallback defensivo.
+    setTimeout(() => {
+      logoutButton.disabled = false;
+      logoutButton.textContent = originalText;
+      window.location.replace("./admin-login.html");
+    }, 2500);
+  });
+}
+
+
 /* =========================================================
    LOGIN DO PAINEL
    ========================================================= */
@@ -166,6 +220,9 @@ adminLoginForm?.addEventListener("submit", async event => {
 
 async function initAdmin() {
   if (!adminApp) return;
+
+  // O botão Sair não depende do carregamento da agenda.
+  bindAdminLogout();
 
   if (!window.sb) {
     window.location.replace("./admin-login.html");
@@ -282,6 +339,287 @@ async function initAdmin() {
 
     return barberFilter.value || null;
   }
+
+
+  /* =========================================================
+     HORÁRIOS DA BARBEARIA
+     ========================================================= */
+
+  const WEEKDAYS = [
+    { id: 0, label: "Domingo" },
+    { id: 1, label: "Segunda-feira" },
+    { id: 2, label: "Terça-feira" },
+    { id: 3, label: "Quarta-feira" },
+    { id: 4, label: "Quinta-feira" },
+    { id: 5, label: "Sexta-feira" },
+    { id: 6, label: "Sábado" }
+  ];
+
+  const openingDays = document.getElementById("openingDays");
+  const openingHoursStatus = document.getElementById("openingHoursStatus");
+  const shopMode = document.getElementById("shopMode");
+  const schedulePermissions = document.getElementById("schedulePermissions");
+  const scheduleEditorsList = document.getElementById("scheduleEditorsList");
+
+  let canEditOpeningHours = false;
+
+  function renderOpeningRows(rows) {
+    if (!openingDays) return;
+
+    const byDay = {};
+    (rows || []).forEach(row => {
+      byDay[Number(row.weekday)] = row;
+    });
+
+    openingDays.innerHTML = WEEKDAYS.map(day => {
+      const row = byDay[day.id] || {
+        weekday: day.id,
+        is_open: day.id >= 1 && day.id <= 6,
+        open_time: "09:00",
+        close_time: "18:00"
+      };
+
+      return `
+        <div class="opening-day-row" data-weekday="${day.id}">
+          <label class="opening-day-toggle">
+            <input
+              type="checkbox"
+              data-open-toggle
+              ${row.is_open ? "checked" : ""}
+              ${canEditOpeningHours ? "" : "disabled"}
+            />
+            <span>${day.label}</span>
+          </label>
+
+          <div class="opening-time-fields">
+            <label>
+              <span>Abre</span>
+              <input
+                type="time"
+                data-open-time
+                value="${String(row.open_time || "09:00").slice(0,5)}"
+                ${canEditOpeningHours ? "" : "disabled"}
+              />
+            </label>
+
+            <label>
+              <span>Fecha</span>
+              <input
+                type="time"
+                data-close-time
+                value="${String(row.close_time || "18:00").slice(0,5)}"
+                ${canEditOpeningHours ? "" : "disabled"}
+              />
+            </label>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    openingDays.querySelectorAll("[data-open-toggle]").forEach(toggle => {
+      const row = toggle.closest(".opening-day-row");
+      const inputs = row.querySelectorAll("[data-open-time],[data-close-time]");
+
+      const sync = () => {
+        inputs.forEach(input => {
+          input.disabled = !canEditOpeningHours || !toggle.checked;
+        });
+      };
+
+      toggle.addEventListener("change", sync);
+      sync();
+    });
+  }
+
+  async function loadOpeningSettings() {
+    if (!openingDays) return;
+
+    openingHoursStatus.textContent = "Carregando horários...";
+
+    const { data, error } = await window.sb.rpc(
+      "dashboard_get_business_hours"
+    );
+
+    if (error) {
+      console.error(error);
+      openingHoursStatus.textContent =
+        error.message || "Não foi possível carregar os horários.";
+      return;
+    }
+
+    const rows = data || [];
+
+    canEditOpeningHours = Boolean(
+      rows.length ? rows[0].can_edit : false
+    );
+
+    if (shopMode) {
+      shopMode.value = rows.length
+        ? (rows[0].manual_mode || "automatic")
+        : "automatic";
+
+      shopMode.disabled = !canEditOpeningHours;
+    }
+
+    document.getElementById("saveShopMode").disabled =
+      !canEditOpeningHours;
+
+    document.getElementById("saveOpeningHours").disabled =
+      !canEditOpeningHours;
+
+    renderOpeningRows(rows);
+
+    openingHoursStatus.textContent =
+      canEditOpeningHours
+        ? "Você tem permissão para editar os horários."
+        : "Somente administradores e barbeiros autorizados podem alterar os horários.";
+  }
+
+  document.getElementById("saveShopMode")
+    ?.addEventListener("click", async () => {
+      if (!canEditOpeningHours) return;
+
+      const button = document.getElementById("saveShopMode");
+      button.disabled = true;
+      button.textContent = "Salvando...";
+
+      const { error } = await window.sb.rpc(
+        "dashboard_set_shop_mode",
+        { p_mode: shopMode.value }
+      );
+
+      button.disabled = false;
+      button.textContent = "Salvar status";
+
+      if (error) {
+        openingHoursStatus.textContent =
+          error.message || "Não foi possível salvar o status.";
+        return;
+      }
+
+      openingHoursStatus.textContent =
+        "Status da barbearia atualizado.";
+    });
+
+  document.getElementById("saveOpeningHours")
+    ?.addEventListener("click", async () => {
+      if (!canEditOpeningHours) return;
+
+      const button = document.getElementById("saveOpeningHours");
+      button.disabled = true;
+      button.textContent = "Salvando...";
+
+      const rows = [
+        ...document.querySelectorAll(".opening-day-row")
+      ];
+
+      try {
+        for (const row of rows) {
+          const weekday = Number(row.dataset.weekday);
+          const isOpen =
+            row.querySelector("[data-open-toggle]").checked;
+          const openTime =
+            row.querySelector("[data-open-time]").value;
+          const closeTime =
+            row.querySelector("[data-close-time]").value;
+
+          const { error } = await window.sb.rpc(
+            "dashboard_save_business_day",
+            {
+              p_weekday: weekday,
+              p_is_open: isOpen,
+              p_open_time: openTime || "09:00",
+              p_close_time: closeTime || "18:00"
+            }
+          );
+
+          if (error) throw error;
+        }
+
+        openingHoursStatus.textContent =
+          "Dias e horários salvos com sucesso.";
+
+      } catch (error) {
+        console.error(error);
+        openingHoursStatus.textContent =
+          error.message || "Não foi possível salvar os horários.";
+
+      } finally {
+        button.disabled = false;
+        button.textContent = "Salvar dias e horários";
+      }
+    });
+
+  async function loadScheduleEditorPermissions() {
+    if (profile.role !== "admin" || !schedulePermissions) return;
+
+    schedulePermissions.classList.remove("hidden");
+    scheduleEditorsList.innerHTML =
+      `<div class="empty-state">Carregando barbeiros...</div>`;
+
+    const { data, error } = await window.sb.rpc(
+      "admin_list_schedule_editors"
+    );
+
+    if (error) {
+      console.error(error);
+      scheduleEditorsList.innerHTML =
+        `<div class="empty-state">Erro ao carregar permissões.</div>`;
+      return;
+    }
+
+    scheduleEditorsList.innerHTML = (data || []).map(row => `
+      <label class="schedule-editor-row">
+        <span>
+          <strong>${html(row.display_name)}</strong>
+          <small>${row.can_edit ? "Pode alterar horários" : "Sem permissão"}</small>
+        </span>
+
+        <input
+          type="checkbox"
+          data-schedule-editor="${html(row.barber_id)}"
+          ${row.can_edit ? "checked" : ""}
+        />
+      </label>
+    `).join("");
+
+    scheduleEditorsList
+      .querySelectorAll("[data-schedule-editor]")
+      .forEach(toggle => {
+        toggle.addEventListener("change", async () => {
+          const barberId = toggle.dataset.scheduleEditor;
+          toggle.disabled = true;
+
+          const { error } = await window.sb.rpc(
+            "admin_set_schedule_editor",
+            {
+              p_barber_id: barberId,
+              p_can_edit: toggle.checked
+            }
+          );
+
+          toggle.disabled = false;
+
+          if (error) {
+            console.error(error);
+            toggle.checked = !toggle.checked;
+            openingHoursStatus.textContent =
+              error.message || "Não foi possível alterar a permissão.";
+            return;
+          }
+
+          const small = toggle.closest(".schedule-editor-row")
+            ?.querySelector("small");
+
+          if (small) {
+            small.textContent = toggle.checked
+              ? "Pode alterar horários"
+              : "Sem permissão";
+          }
+        });
+      });
+  }
+
 
   /* =========================================================
      CONFIGURAÇÃO DOS LEMBRETES AUTOMÁTICOS
@@ -634,6 +972,8 @@ async function initAdmin() {
   }
 
   updateViewControls();
+  await loadOpeningSettings();
+  await loadScheduleEditorPermissions();
   await loadReminderSettings();
   await loadAppointments();
 
@@ -652,6 +992,8 @@ async function initAdmin() {
 
   document.getElementById("refreshAppointments")
     .addEventListener("click", async () => {
+      await loadOpeningSettings();
+      await loadScheduleEditorPermissions();
       await loadReminderSettings();
       await loadAppointments();
     });
@@ -661,6 +1003,12 @@ async function initAdmin() {
       await window.sb.auth.signOut();
       window.location.href = "./admin-login.html";
     });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bindAdminLogout);
+} else {
+  bindAdminLogout();
 }
 
 initAdmin();

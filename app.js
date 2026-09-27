@@ -17,6 +17,8 @@ let selectedDate = null;
 let selectedTime = null;
 let selectedBarber = null;
 let availableBarbers = [];
+let businessHours = null;
+let shopStatus = null;
 
 document.getElementById("year").textContent = new Date().getFullYear();
 
@@ -58,16 +60,27 @@ function timeFromMinutes(total) {
 }
 
 function getSlotsForDate(date) {
-  const schedule = CONFIG.OPENING_HOURS[date.getDay()];
-  if (!schedule) return [];
+  const weekday = date.getDay();
 
-  const start = minutesFromTime(schedule.open);
-  const end = minutesFromTime(schedule.close);
+  const schedule =
+    businessHours?.[weekday] ||
+    CONFIG.OPENING_HOURS?.[weekday];
+
+  if (!schedule || schedule.is_open === false) return [];
+
+  const openTime = schedule.open_time || schedule.open;
+  const closeTime = schedule.close_time || schedule.close;
+
+  if (!openTime || !closeTime) return [];
+
+  const start = minutesFromTime(String(openTime).slice(0, 5));
+  const end = minutesFromTime(String(closeTime).slice(0, 5));
   const slots = [];
 
   for (let value = start; value < end; value += CONFIG.SLOT_INTERVAL_MINUTES) {
     slots.push(timeFromMinutes(value));
   }
+
   return slots;
 }
 
@@ -109,6 +122,70 @@ function requireSupabase() {
     true
   );
   return false;
+}
+
+
+async function loadBusinessSchedule() {
+  if (!window.sb) return;
+
+  try {
+    const { data: hours, error: hoursError } =
+      await window.sb.rpc("public_get_business_hours");
+
+    if (hoursError) throw hoursError;
+
+    businessHours = {};
+
+    (hours || []).forEach(row => {
+      businessHours[Number(row.weekday)] = {
+        is_open: Boolean(row.is_open),
+        open_time: row.open_time,
+        close_time: row.close_time
+      };
+    });
+
+    const { data: statusData, error: statusError } =
+      await window.sb.rpc("public_get_shop_status");
+
+    if (statusError) throw statusError;
+
+    shopStatus = Array.isArray(statusData)
+      ? statusData[0]
+      : statusData;
+
+    renderShopStatus();
+
+  } catch (error) {
+    console.warn("Não foi possível carregar os horários da barbearia:", error);
+    renderShopStatus(true);
+  }
+}
+
+function renderShopStatus(fallback = false) {
+  const box = document.getElementById("shopPublicStatus");
+  const badge = document.getElementById("shopStatusBadge");
+  const detail = document.getElementById("shopStatusDetail");
+
+  if (!box || !badge) return;
+
+  if (fallback || !shopStatus) {
+    box.classList.add("unknown");
+    badge.textContent = "Horários disponíveis abaixo";
+    if (detail) detail.textContent = "";
+    return;
+  }
+
+  const isOpen = Boolean(shopStatus.is_open_now);
+  box.classList.toggle("open", isOpen);
+  box.classList.toggle("closed", !isOpen);
+
+  badge.textContent = isOpen
+    ? "Barbearia aberta agora"
+    : "Barbearia fechada agora";
+
+  if (detail) {
+    detail.textContent = shopStatus.status_detail || "";
+  }
 }
 
 async function loadBarbers() {
@@ -598,4 +675,7 @@ bookingForm.addEventListener("submit", async event => {
   }
 });
 
-loadBarbers();
+(async () => {
+  await loadBusinessSchedule();
+  await loadBarbers();
+})();
