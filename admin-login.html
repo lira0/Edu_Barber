@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260927-10" />
+  <link rel="stylesheet" href="./styles.css?v=20260927-12" />
 </head>
 <body class="auth-body">
   <main class="auth-layout">
@@ -37,12 +37,16 @@
       <div class="auth-card">
         <span class="eyebrow">ACESSO RESTRITO</span>
         <h2>Entrar no painel</h2>
-        <p class="auth-lead">Use o usuário da barbearia e sua senha.</p>
+        <p class="auth-lead">Entre com seu telefone ou e-mail cadastrado e sua senha.</p>
 
         <form class="auth-form" id="adminLoginForm">
           <div class="field">
-            <label for="adminEmail">Usuário / e-mail</label>
-            <input id="adminEmail" type="email" autocomplete="username" placeholder="barbeiro@email.com" required />
+            <label for="adminIdentity">Telefone ou e-mail</label>
+            <input id="adminIdentity" type="text" autocomplete="username"
+                   placeholder="(85) 99999-9999 ou barbeiro@email.com" required />
+            <small class="field-help">
+              O telefone precisa estar vinculado à conta do barbeiro ou administrador.
+            </small>
           </div>
 
           <div class="field">
@@ -60,7 +64,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./supabase-client.js?v=20260927-10"></script>
-  <script src="./admin.js?v=20260927-10"></script>
+  <script src="./supabase-client.js?v=20260927-12"></script>
+    <script src="./identity-login.js?v=20260927-12"></script>
+  <script src="./admin.js?v=20260927-12"></script>
 </body>
 </html>

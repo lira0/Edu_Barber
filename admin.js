@@ -159,23 +159,60 @@ adminLoginForm?.addEventListener("submit", async event => {
     return;
   }
 
-  const email = document.getElementById("adminEmail").value.trim().toLowerCase();
-  const password = document.getElementById("adminPassword").value;
-  const button = adminLoginForm.querySelector('button[type="submit"]');
+  if (!window.BarberAuth?.signInWithIdentity) {
+    adminMessage(
+      adminLoginStatus,
+      "O módulo de login não foi carregado. Atualize a página.",
+      "error"
+    );
+    return;
+  }
+
+  const identity =
+    document.getElementById("adminIdentity").value.trim();
+
+  const password =
+    document.getElementById("adminPassword").value;
+
+  const button =
+    adminLoginForm.querySelector('button[type="submit"]');
+
+  if (!identity || !password) {
+    adminMessage(
+      adminLoginStatus,
+      "Informe telefone/e-mail e senha.",
+      "error"
+    );
+    return;
+  }
 
   button.disabled = true;
   button.textContent = "Entrando...";
-  adminMessage(adminLoginStatus, "Validando acesso...", "info");
 
-  const { error: loginError } = await window.sb.auth.signInWithPassword({
-    email,
-    password
-  });
+  adminMessage(
+    adminLoginStatus,
+    "Validando acesso...",
+    "info"
+  );
+
+  const { error: loginError } =
+    await window.BarberAuth.signInWithIdentity(
+      identity,
+      password
+    );
 
   if (loginError) {
+    console.error("Falha no login do painel:", loginError);
+
     button.disabled = false;
     button.textContent = "Entrar no painel";
-    adminMessage(adminLoginStatus, "Usuário ou senha inválidos.", "error");
+
+    adminMessage(
+      adminLoginStatus,
+      "Telefone/e-mail ou senha inválidos.",
+      "error"
+    );
+
     return;
   }
 
@@ -193,14 +230,21 @@ adminLoginForm?.addEventListener("submit", async event => {
         "Esta conta não tem permissão para acessar o painel.",
         "error"
       );
+
       return;
     }
 
-    adminMessage(adminLoginStatus, "Acesso autorizado.", "success");
+    adminMessage(
+      adminLoginStatus,
+      "Acesso autorizado.",
+      "success"
+    );
+
     window.location.href = "./admin.html";
 
   } catch (error) {
     console.error(error);
+
     await window.sb.auth.signOut();
 
     button.disabled = false;
@@ -562,9 +606,21 @@ async function initAdmin() {
     );
 
     if (error) {
-      console.error(error);
-      scheduleEditorsList.innerHTML =
-        `<div class="empty-state">Erro ao carregar permissões.</div>`;
+      console.error("Erro ao carregar permissões de horários:", error);
+
+      const errorCode = error.code ? ` (${error.code})` : "";
+      const errorMessage =
+        error.message ||
+        error.details ||
+        "Erro desconhecido ao consultar o Supabase.";
+
+      scheduleEditorsList.innerHTML = `
+        <div class="empty-state">
+          <strong>Não foi possível carregar as permissões.</strong><br>
+          <small>${html(errorMessage)}${html(errorCode)}</small>
+        </div>
+      `;
+
       return;
     }
 

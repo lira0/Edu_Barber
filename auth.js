@@ -209,65 +209,126 @@ registerForm?.addEventListener("submit", async event => {
 
 const loginForm = document.getElementById("loginForm");
 
+async function getLoginProfileRole() {
+  if (!window.sb) return null;
+
+  const {
+    data: { user }
+  } = await window.sb.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await window.sb
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Não foi possível consultar a função da conta:", error);
+    return null;
+  }
+
+  return data?.role || null;
+}
+
 loginForm?.addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!ensureSupabase()) return;
+
+  if (!window.BarberAuth?.signInWithIdentity) {
+    return setAuthStatus(
+      "O módulo de login não foi carregado. Atualize a página e tente novamente.",
+      "error"
+    );
+  }
 
   const button = loginForm.querySelector('button[type="submit"]');
   const identity = document.getElementById("loginIdentity").value.trim();
   const password = document.getElementById("loginPassword").value;
 
   if (!identity) {
-    return setAuthStatus("Informe seu WhatsApp ou e-mail.", "error");
+    return setAuthStatus("Informe seu telefone ou e-mail.", "error");
+  }
+
+  if (!password) {
+    return setAuthStatus("Informe sua senha.", "error");
   }
 
   button.disabled = true;
   button.textContent = "Entrando...";
   setAuthStatus("Validando acesso...", "info");
 
-  let email;
-
-  if (identity.includes("@")) {
-    // Barbeiro/admin usa e-mail real.
-    email = identity.toLowerCase();
-  } else {
-    // Cliente informa somente o WhatsApp.
-    email = customerTechnicalEmail(identity);
-
-    if (!email) {
-      button.disabled = false;
-      button.textContent = "Entrar";
-
-      return setAuthStatus(
-        "Informe um WhatsApp válido com DDD.",
-        "error"
-      );
-    }
-  }
-
-  const { error } = await window.sb.auth.signInWithPassword({
-    email,
+  const { error } = await window.BarberAuth.signInWithIdentity(
+    identity,
     password
-  });
+  );
 
   if (error) {
+    console.error("Falha no login:", error);
+
     button.disabled = false;
     button.textContent = "Entrar";
 
+    if (String(error.message || "") === "INVALID_PHONE") {
+      return setAuthStatus(
+        "Informe um telefone válido com DDD.",
+        "error"
+      );
+    }
+
     return setAuthStatus(
-      "WhatsApp/e-mail ou senha inválidos.",
+      "Telefone/e-mail ou senha inválidos.",
       "error"
     );
   }
 
-  await claimGuestAppointments();
+  const role = await getLoginProfileRole();
+
+  if (!role) {
+    await window.sb.auth.signOut();
+
+    button.disabled = false;
+    button.textContent = "Entrar";
+
+    return setAuthStatus(
+      "Não foi possível identificar o tipo da conta.",
+      "error"
+    );
+  }
+
+  /* A conta do S5 é interna e não deve entrar no site. */
+  if (role === "device") {
+    await window.sb.auth.signOut();
+
+    button.disabled = false;
+    button.textContent = "Entrar";
+
+    return setAuthStatus(
+      "Esta conta é exclusiva do dispositivo de lembretes.",
+      "error"
+    );
+  }
+
+  /*
+    Somente clientes devem reivindicar agendamentos feitos
+    anteriormente como visitante.
+  */
+  if (role === "customer") {
+    await claimGuestAppointments();
+  }
 
   button.disabled = false;
   button.textContent = "Entrar";
   setAuthStatus("Login realizado com sucesso.", "success");
 
   setTimeout(() => {
+    if (role === "barber" || role === "admin") {
+      window.location.href = "./admin.html";
+      return;
+    }
+
     window.location.href = "./meus-agendamentos.html";
   }, 450);
 });

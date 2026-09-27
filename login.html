@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260927-10" />
+  <link rel="stylesheet" href="./styles.css?v=20260927-12" />
 </head>
 <body class="auth-body">
   <main class="auth-layout">
@@ -18,9 +18,9 @@
         <span><strong>Freitas Barbearia</strong><small>Estilo, precisão e atitude.</small></span>
       </a>
       <div>
-        <span class="eyebrow">ÁREA DO CLIENTE</span>
-        <h1>Sua cadeira está esperando.</h1>
-        <p>Entre para acessar seus dados e tornar o agendamento ainda mais rápido.</p>
+        <span class="eyebrow">ACESSO FREITAS</span>
+        <h1>Seu acesso em um só lugar.</h1>
+        <p>Clientes, barbeiros e administradores podem entrar usando telefone ou e-mail e senha.</p>
       </div>
       <a class="auth-back" href="./index.html">← Voltar para a barbearia</a>
     </section>
@@ -30,14 +30,14 @@
         
         <span class="eyebrow">BEM-VINDO DE VOLTA</span>
         <h2>Entrar</h2>
-        <p class="auth-lead">Acesse sua conta para agilizar seus próximos agendamentos.</p>
+        <p class="auth-lead">Digite seu telefone ou e-mail cadastrado e sua senha.</p>
         <form class="auth-form" id="loginForm">
           <div class="field">
-            <label for="loginIdentity">WhatsApp ou e-mail</label>
+            <label for="loginIdentity">Telefone ou e-mail</label>
             <input id="loginIdentity" type="text" autocomplete="username"
-                   placeholder="(85) 99999-9999 ou barbeiro@email.com" required />
+                   placeholder="(85) 99999-9999 ou nome@email.com" required />
             <small class="field-help">
-              Clientes entram pelo WhatsApp. Barbeiros e administradores usam e-mail.
+              Use o telefone cadastrado ou, se sua conta possuir e-mail, entre pelo e-mail.
             </small>
           </div>
           <div class="field">
@@ -55,7 +55,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-  <script src="./supabase-client.js?v=20260927-10"></script>
-  <script src="./auth.js?v=20260927-10"></script>
+  <script src="./supabase-client.js?v=20260927-12"></script>
+    <script src="./identity-login.js?v=20260927-12"></script>
+  <script src="./auth.js?v=20260927-12"></script>
 </body>
 </html>
