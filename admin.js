@@ -562,21 +562,9 @@ async function initAdmin() {
     );
 
     if (error) {
-      console.error("Erro ao carregar permissões de horários:", error);
-
-      const errorCode = error.code ? ` (${error.code})` : "";
-      const errorMessage =
-        error.message ||
-        error.details ||
-        "Erro desconhecido ao consultar o Supabase.";
-
-      scheduleEditorsList.innerHTML = `
-        <div class="empty-state">
-          <strong>Não foi possível carregar as permissões.</strong><br>
-          <small>${html(errorMessage)}${html(errorCode)}</small>
-        </div>
-      `;
-
+      console.error(error);
+      scheduleEditorsList.innerHTML =
+        `<div class="empty-state">Erro ao carregar permissões.</div>`;
       return;
     }
 
