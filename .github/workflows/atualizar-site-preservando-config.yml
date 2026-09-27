@@ -1,0 +1,99 @@
+name: Atualizar site pelo ZIP
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "*.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Localizar ZIP
+        id: find_zip
+        shell: bash
+        run: |
+          set -e
+          ZIP_FILE="$(find . -maxdepth 1 -type f -name '*.zip' | head -n 1)"
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Nenhum .zip encontrado na raiz."
+            exit 1
+          fi
+
+          echo "zip_file=$ZIP_FILE" >> "$GITHUB_OUTPUT"
+          echo "Usando: $ZIP_FILE"
+
+      - name: Preservar config.js existente
+        shell: bash
+        run: |
+          if [ -f "config.js" ]; then
+            cp config.js /tmp/config.js.backup
+            echo "config.js atual preservado."
+          else
+            echo "Nenhum config.js existente para preservar."
+          fi
+
+      - name: Descompactar atualizacao
+        shell: bash
+        run: |
+          set -e
+          ZIP_FILE="${{ steps.find_zip.outputs.zip_file }}"
+
+          rm -rf extracted_temp
+          mkdir -p extracted_temp
+
+          unzip -o "$ZIP_FILE" -d extracted_temp
+
+          ROOT_ITEMS="$(find extracted_temp -mindepth 1 -maxdepth 1 | wc -l)"
+
+          if [ "$ROOT_ITEMS" -eq 1 ] && [ -d "$(find extracted_temp -mindepth 1 -maxdepth 1 | head -n 1)" ]; then
+            INNER_DIR="$(find extracted_temp -mindepth 1 -maxdepth 1 | head -n 1)"
+            cp -a "$INNER_DIR"/. .
+          else
+            cp -a extracted_temp/. .
+          fi
+
+          rm -rf extracted_temp
+
+      - name: Restaurar config.js
+        shell: bash
+        run: |
+          if [ -f "/tmp/config.js.backup" ]; then
+            cp /tmp/config.js.backup config.js
+            echo "config.js restaurado. Credenciais preservadas."
+          fi
+
+      - name: Conferir configuracao sem exibir a chave
+        shell: bash
+        run: |
+          echo "URL configurada:"
+          grep -n "SUPABASE_URL" config.js || true
+          echo "Chave presente:"
+          grep -n "SUPABASE_PUBLISHABLE_KEY" config.js | sed 's/:.*/: [OCULTA]/' || true
+
+      - name: Commitar atualizacao
+        shell: bash
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteracao para commitar."
+            exit 0
+          fi
+
+          git commit -m "Atualizar site pelo ZIP"
+          git push
