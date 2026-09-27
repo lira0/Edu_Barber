@@ -1,0 +1,9 @@
+CORREÇÃO DE PERMISSÕES DE HORÁRIOS v11
+
+1. Execute corrigir-permissoes-horarios.sql no Supabase SQL Editor.
+2. Depois substitua admin.html e admin.js no GitHub Pages.
+3. Saia e entre novamente com a conta admin.
+4. Abra o painel.
+
+O admin.js desta versão também mostra o erro real do Supabase
+caso a consulta falhe novamente.
