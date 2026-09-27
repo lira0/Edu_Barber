@@ -8,14 +8,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=20260926-7" />
 </head>
 <body class="admin-body">
   <div class="admin-shell" id="adminApp">
     <aside class="admin-sidebar">
       <a class="brand" href="./admin.html">
         <span class="brand-mark">BP</span>
-        <span><strong>Barbearia Prime</strong><small>Painel administrativo</small></span>
+        <span>
+          <strong>Barbearia Prime</strong>
+          <small>Painel administrativo</small>
+        </span>
       </a>
 
       <nav class="admin-menu">
@@ -34,15 +37,49 @@
     <main class="admin-main">
       <header class="admin-header">
         <div>
-          <span class="eyebrow">AGENDA DA BARBEARIA</span>
-          <h1>Atendimentos</h1>
+          <span class="eyebrow">PAINEL DO BARBEIRO</span>
+          <h1>Clientes agendados</h1>
           <p id="adminSubtitle">Carregando sua agenda...</p>
         </div>
         <button class="secondary-btn" id="refreshAppointments" type="button">Atualizar</button>
       </header>
 
+      <section class="admin-reminder-settings">
+        <div class="reminder-settings-copy">
+          <span class="eyebrow">LEMBRETES AUTOMÁTICOS</span>
+          <h2>Quantidade de lembretes</h2>
+          <p>
+            Escolha quantos lembretes automáticos cada cliente deste barbeiro receberá
+            antes do atendimento. Alterações são aplicadas aos agendamentos futuros.
+          </p>
+        </div>
+
+        <div class="reminder-settings-control">
+          <label for="reminderCount">Lembretes por agendamento</label>
+          <select id="reminderCount">
+            <option value="0">0 — desativado</option>
+            <option value="1">1 — 1 hora antes</option>
+            <option value="2">2 — 24 horas e 1 hora antes</option>
+            <option value="3">3 — 24h, 2h e 1h antes</option>
+            <option value="4">4 — 48h, 24h, 2h e 1h antes</option>
+          </select>
+          <button class="primary-btn" id="saveReminderSettings" type="button">
+            Salvar lembretes
+          </button>
+          <small id="reminderSettingsStatus"></small>
+        </div>
+      </section>
+
       <section class="admin-toolbar">
         <div class="admin-filter">
+          <label for="adminViewMode">Visualização</label>
+          <select id="adminViewMode">
+            <option value="upcoming">Próximos agendamentos</option>
+            <option value="date">Data específica</option>
+          </select>
+        </div>
+
+        <div class="admin-filter hidden" id="adminDateWrap">
           <label for="adminDate">Data</label>
           <input id="adminDate" type="date" />
         </div>
@@ -67,7 +104,7 @@
 
       <section class="admin-stats">
         <article>
-          <span>Agendados</span>
+          <span>Na lista</span>
           <strong id="statTotal">0</strong>
         </article>
         <article>
@@ -87,12 +124,13 @@
       <section class="admin-agenda-card">
         <div class="admin-list-heading">
           <div>
-            <h2 id="agendaDateTitle">Agenda</h2>
+            <h2 id="agendaDateTitle">Próximos agendamentos</h2>
             <span id="agendaCount">0 clientes</span>
           </div>
         </div>
 
         <div id="adminStatus" class="admin-inline-status" aria-live="polite"></div>
+
         <div id="appointmentsList" class="appointments-list">
           <div class="empty-state">Carregando...</div>
         </div>
@@ -103,6 +141,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
   <script src="./supabase-client.js"></script>
-  <script src="./admin.js"></script>
+  <script src="./admin.js?v=20260926-7"></script>
 </body>
 </html>

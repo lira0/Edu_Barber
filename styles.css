@@ -820,3 +820,90 @@ body.dialog-open{
   color:var(--muted);
   line-height:1.72;
 }
+
+
+/* ---------- Painel do barbeiro + lembretes v7 ---------- */
+.admin-reminder-settings{
+  margin-top:28px;
+  padding:22px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(260px,360px);
+  gap:28px;
+  align-items:center;
+  border:1px solid rgba(215,170,88,.24);
+  border-radius:20px;
+  background:
+    linear-gradient(135deg,rgba(215,170,88,.07),rgba(255,255,255,.01)),
+    #101010;
+}
+
+.reminder-settings-copy h2{
+  margin:7px 0 7px;
+  font-size:20px;
+}
+
+.reminder-settings-copy p{
+  margin:0;
+  color:var(--muted);
+  line-height:1.65;
+  font-size:13px;
+}
+
+.reminder-settings-control{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+
+.reminder-settings-control label{
+  color:#ddd6cb;
+  font-size:12px;
+  font-weight:700;
+}
+
+.reminder-settings-control select{
+  width:100%;
+  height:46px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  outline:none;
+  background:#0b0b0b;
+  color:var(--text);
+}
+
+.reminder-settings-control select:focus{
+  border-color:var(--gold);
+}
+
+.reminder-settings-control small{
+  min-height:17px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+.admin-inline-status.error{
+  color:#ffb9b9;
+}
+
+.reminder-action{
+  color:#f0d69d;
+  border-color:rgba(215,170,88,.34);
+  background:rgba(215,170,88,.06);
+}
+
+.reminder-action:hover{
+  border-color:rgba(215,170,88,.7);
+  background:rgba(215,170,88,.11);
+}
+
+.appointment-client small{
+  text-transform:none;
+}
+
+@media(max-width:900px){
+  .admin-reminder-settings{
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+}

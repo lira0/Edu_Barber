@@ -1,0 +1,26 @@
+PATCH — PAINEL DO BARBEIRO + LEMBRETES
+
+Arquivos:
+- admin.html
+- admin.js
+- styles.css
+- supabase-painel-barbeiro-lembretes.sql
+
+1. Execute primeiro TODO o arquivo SQL no Supabase SQL Editor.
+2. Depois aplique os 3 arquivos do site.
+3. Entre novamente com a conta do barbeiro.
+
+Mudanças:
+- barbeiro vê somente os próprios clientes;
+- o painel abre em "Próximos agendamentos", não apenas hoje;
+- botão "Enviar lembrete agora" cria notification_job PENDING;
+- o S5 pega o lembrete manual no próximo polling;
+- cada barbeiro escolhe 0, 1, 2, 3 ou 4 lembretes automáticos;
+- mudar a quantidade recria os lembretes ainda pendentes dos horários futuros.
+
+Presets:
+0 = nenhum
+1 = 1h antes
+2 = 24h + 1h
+3 = 24h + 2h + 1h
+4 = 48h + 24h + 2h + 1h

@@ -21,7 +21,9 @@ function localDateKey(date = new Date()) {
 
 function brDate(dateKey) {
   if (!dateKey) return "—";
-  const [y,m,d] = dateKey.split("-").map(Number);
+
+  const [y,m,d] = String(dateKey).split("-").map(Number);
+
   return new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -30,10 +32,29 @@ function brDate(dateKey) {
   }).format(new Date(y, m - 1, d));
 }
 
+function compactDate(dateKey) {
+  if (!dateKey) return "—";
+
+  const [y,m,d] = String(dateKey).split("-").map(Number);
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short"
+  }).format(new Date(y, m - 1, d));
+}
+
 function phoneDisplay(phone) {
   const d = String(phone || "").replace(/\D/g, "").replace(/^55/, "");
-  if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-  if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+
+  if (d.length === 11) {
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  }
+
+  if (d.length === 10) {
+    return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  }
+
   return phone || "—";
 }
 
@@ -41,10 +62,21 @@ function waPhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
 
+function setInlineStatus(message, error = false) {
+  const el = document.getElementById("adminStatus");
+  if (!el) return;
+
+  el.textContent = message || "";
+  el.classList.toggle("error", Boolean(error));
+}
+
 async function getCurrentProfile() {
   const { data: sessionData } = await window.sb.auth.getSession();
   const user = sessionData.session?.user;
-  if (!user) return { user: null, profile: null };
+
+  if (!user) {
+    return { user: null, profile: null };
+  }
 
   const { data: profile, error } = await window.sb
     .from("profiles")
@@ -53,14 +85,23 @@ async function getCurrentProfile() {
     .single();
 
   if (error) throw error;
+
   return { user, profile };
 }
 
-adminLoginForm?.addEventListener("submit", async (event) => {
+/* =========================================================
+   LOGIN DO PAINEL
+   ========================================================= */
+
+adminLoginForm?.addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!window.sb) {
-    adminMessage(adminLoginStatus, "Configure o Supabase em config.js primeiro.", "error");
+    adminMessage(
+      adminLoginStatus,
+      "Configure o Supabase em config.js primeiro.",
+      "error"
+    );
     return;
   }
 
@@ -89,11 +130,13 @@ adminLoginForm?.addEventListener("submit", async (event) => {
 
     if (!profile || !["barber", "admin"].includes(profile.role)) {
       await window.sb.auth.signOut();
+
       button.disabled = false;
       button.textContent = "Entrar no painel";
+
       adminMessage(
         adminLoginStatus,
-        "Esta conta não tem permissão para acessar o painel do barbeiro.",
+        "Esta conta não tem permissão para acessar o painel.",
         "error"
       );
       return;
@@ -101,14 +144,25 @@ adminLoginForm?.addEventListener("submit", async (event) => {
 
     adminMessage(adminLoginStatus, "Acesso autorizado.", "success");
     window.location.href = "./admin.html";
+
   } catch (error) {
     console.error(error);
     await window.sb.auth.signOut();
+
     button.disabled = false;
     button.textContent = "Entrar no painel";
-    adminMessage(adminLoginStatus, "Não foi possível validar a permissão da conta.", "error");
+
+    adminMessage(
+      adminLoginStatus,
+      "Não foi possível validar a permissão da conta.",
+      "error"
+    );
   }
 });
+
+/* =========================================================
+   PAINEL
+   ========================================================= */
 
 async function initAdmin() {
   if (!adminApp) return;
@@ -119,6 +173,7 @@ async function initAdmin() {
   }
 
   let profileInfo;
+
   try {
     profileInfo = await getCurrentProfile();
   } catch (error) {
@@ -136,221 +191,476 @@ async function initAdmin() {
   }
 
   const dateInput = document.getElementById("adminDate");
+  const dateWrap = document.getElementById("adminDateWrap");
+  const viewMode = document.getElementById("adminViewMode");
   const statusFilter = document.getElementById("adminStatusFilter");
+
   const barberFilterWrap = document.getElementById("adminBarberFilterWrap");
   const barberFilter = document.getElementById("adminBarberFilter");
+
   const list = document.getElementById("appointmentsList");
-  const inlineStatus = document.getElementById("adminStatus");
+
+  const reminderCount = document.getElementById("reminderCount");
+  const reminderSettingsStatus =
+    document.getElementById("reminderSettingsStatus");
 
   document.getElementById("adminUserName").textContent =
     profile.full_name || user.email || "Barbeiro";
+
   document.getElementById("adminUserRole").textContent =
-    profile.role === "admin" ? "Administrador" : "Barbeiro";
+    profile.role === "admin"
+      ? "Administrador"
+      : "Barbeiro";
 
   dateInput.value = localDateKey();
 
-  let myBarbers = [];
+  /* ---------------------------------------------------------
+     Carrega barbeiros autorizados pela RPC.
+     Para barber: somente o próprio perfil.
+     Para admin: todos.
+     --------------------------------------------------------- */
 
-  const { data: barberRows, error: barberError } = await window.sb
-    .from("barbers")
-    .select("id, display_name, active")
-    .order("display_name");
+  const { data: allowedBarbers, error: barbersError } =
+    await window.sb.rpc("barber_dashboard_barbers");
 
-  if (barberError) {
-    console.error(barberError);
-    inlineStatus.textContent = "Não foi possível carregar o perfil do barbeiro.";
-    return;
-  }
+  if (barbersError) {
+    console.error(barbersError);
 
-  myBarbers = barberRows || [];
-
-  if (!myBarbers.length) {
     list.innerHTML = `
       <div class="empty-state">
-        Sua conta está autorizada, mas ainda não há um perfil de barbeiro vinculado.
-        Execute a função <code>promote_user_to_barber</code> no SQL Editor conforme o README.
-      </div>`;
+        Não foi possível carregar o vínculo da conta com o barbeiro.
+      </div>
+    `;
+
+    setInlineStatus(
+      barbersError.message || "Falha ao carregar o barbeiro.",
+      true
+    );
+
     return;
   }
 
-  if (profile.role === "admin" && myBarbers.length > 1) {
+  const barbers = allowedBarbers || [];
+
+  if (!barbers.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        Sua conta tem permissão de barbeiro, mas não existe um perfil de profissional
+        vinculado a ela. Execute novamente o patch SQL desta atualização.
+      </div>
+    `;
+    return;
+  }
+
+  if (profile.role === "admin") {
     barberFilterWrap.classList.remove("hidden");
-    barberFilter.innerHTML = `<option value="all">Todos os barbeiros</option>`;
-    myBarbers.forEach(b => {
+    barberFilter.innerHTML = `<option value="">Todos os barbeiros</option>`;
+
+    barbers.forEach(barber => {
       barberFilter.insertAdjacentHTML(
         "beforeend",
-        `<option value="${html(b.id)}">${html(b.display_name)}</option>`
+        `<option value="${html(barber.barber_id)}">${html(barber.display_name)}</option>`
       );
     });
+  } else {
+    barberFilterWrap.classList.add("hidden");
   }
+
+  const ownBarber = profile.role === "barber"
+    ? barbers[0]
+    : null;
 
   document.getElementById("adminSubtitle").textContent =
     profile.role === "admin"
-      ? "Visão administrativa dos horários registrados no Supabase."
-      : `Agenda de ${myBarbers[0].display_name}.`;
+      ? "Acompanhe os horários registrados no Supabase."
+      : `Agenda de ${ownBarber?.display_name || profile.full_name || "barbeiro"}.`;
 
-  async function loadAppointments() {
-    const date = dateInput.value;
-    const status = statusFilter.value;
-    const selectedBarberId = barberFilter?.value || myBarbers[0]?.id;
-
-    list.innerHTML = `<div class="empty-state">Carregando agenda...</div>`;
-    inlineStatus.textContent = "";
-
-    let query = window.sb
-      .from("appointments")
-      .select(`
-        id,
-        customer_name,
-        phone,
-        appointment_date,
-        appointment_time,
-        reminder_consent,
-        status,
-        created_at,
-        barber_id,
-        service_id,
-        barbers(display_name),
-        services(name, duration_minutes, price)
-      `)
-      .eq("appointment_date", date)
-      .order("appointment_time", { ascending: true });
-
-    if (profile.role !== "admin") {
-      query = query.in("barber_id", myBarbers.map(b => b.id));
-    } else if (selectedBarberId && selectedBarberId !== "all") {
-      query = query.eq("barber_id", selectedBarberId);
+  function selectedBarberId() {
+    if (profile.role === "barber") {
+      return ownBarber?.barber_id || null;
     }
 
-    if (status !== "all") {
-      query = query.eq("status", status);
+    return barberFilter.value || null;
+  }
+
+  /* =========================================================
+     CONFIGURAÇÃO DOS LEMBRETES AUTOMÁTICOS
+     ========================================================= */
+
+  async function loadReminderSettings() {
+    const barberId = selectedBarberId();
+
+    if (profile.role === "admin" && !barberId) {
+      reminderCount.disabled = true;
+      document.getElementById("saveReminderSettings").disabled = true;
+
+      reminderSettingsStatus.textContent =
+        "Selecione um barbeiro para alterar a configuração.";
+
+      return;
     }
 
-    const { data, error } = await query;
+    reminderCount.disabled = false;
+    document.getElementById("saveReminderSettings").disabled = false;
+    reminderSettingsStatus.textContent = "Carregando...";
+
+    const { data, error } = await window.sb.rpc(
+      "barber_get_reminder_settings",
+      {
+        p_barber_id: barberId
+      }
+    );
 
     if (error) {
       console.error(error);
-      list.innerHTML = `<div class="empty-state">Erro ao carregar os agendamentos.</div>`;
-      inlineStatus.textContent = error.message || "Falha na consulta.";
+      reminderSettingsStatus.textContent =
+        "Não foi possível carregar a configuração.";
       return;
     }
 
-    const rows = data || [];
+    const row = Array.isArray(data) ? data[0] : data;
 
-    document.getElementById("agendaDateTitle").textContent = brDate(date);
-    document.getElementById("agendaCount").textContent =
-      `${rows.length} ${rows.length === 1 ? "cliente" : "clientes"}`;
+    reminderCount.value = String(row?.automatic_reminder_count ?? 2);
+    reminderSettingsStatus.textContent =
+      "Configuração carregada.";
+  }
 
-    // Stats ignore current status filter: fetch day rows for current barber scope
-    let statsQuery = window.sb
-      .from("appointments")
-      .select("status, barber_id")
-      .eq("appointment_date", date);
+  document.getElementById("saveReminderSettings")
+    .addEventListener("click", async () => {
+      const barberId = selectedBarberId();
+      const count = Number(reminderCount.value);
 
-    if (profile.role !== "admin") {
-      statsQuery = statsQuery.in("barber_id", myBarbers.map(b => b.id));
-    } else if (selectedBarberId && selectedBarberId !== "all") {
-      statsQuery = statsQuery.eq("barber_id", selectedBarberId);
-    }
+      if (profile.role === "admin" && !barberId) {
+        reminderSettingsStatus.textContent =
+          "Selecione um barbeiro primeiro.";
+        return;
+      }
 
-    const { data: statsRows } = await statsQuery;
-    const s = statsRows || [];
+      const button = document.getElementById("saveReminderSettings");
+      button.disabled = true;
+      button.textContent = "Salvando...";
+      reminderSettingsStatus.textContent = "";
 
-    document.getElementById("statTotal").textContent = s.length;
-    document.getElementById("statConfirmed").textContent =
-      s.filter(x => x.status === "confirmed" || x.status === "pending").length;
-    document.getElementById("statCompleted").textContent =
-      s.filter(x => x.status === "completed").length;
-    document.getElementById("statCancelled").textContent =
-      s.filter(x => x.status === "cancelled" || x.status === "no_show").length;
+      const { data, error } = await window.sb.rpc(
+        "barber_set_reminder_count",
+        {
+          p_count: count,
+          p_barber_id: barberId
+        }
+      );
 
-    if (!rows.length) {
-      list.innerHTML = `<div class="empty-state">Nenhum cliente encontrado para os filtros selecionados.</div>`;
-      return;
-    }
+      button.disabled = false;
+      button.textContent = "Salvar lembretes";
 
-    list.innerHTML = rows.map(row => {
-      const time = String(row.appointment_time || "").slice(0,5);
-      const serviceName = row.services?.name || "Atendimento";
-      const barberName = row.barbers?.display_name || "Barbeiro";
-      const phone = phoneDisplay(row.phone);
-      const wa = waPhone(row.phone);
+      if (error) {
+        console.error(error);
+        reminderSettingsStatus.textContent =
+          error.message || "Não foi possível salvar.";
+        return;
+      }
 
-      const statusLabels = {
-        pending: "Pendente",
-        confirmed: "Confirmado",
-        completed: "Concluído",
-        cancelled: "Cancelado",
-        no_show: "Não compareceu"
-      };
+      reminderSettingsStatus.textContent =
+        `Salvo: ${data} lembrete(s) automático(s) por agendamento.`;
 
-      return `
-        <article class="appointment-card" data-id="${html(row.id)}">
-          <div class="appointment-time">
-            <strong>${html(time)}</strong>
-            <span>${html(serviceName)}</span>
+      await loadAppointments();
+    });
+
+  /* =========================================================
+     AGENDA
+     ========================================================= */
+
+  function updateViewControls() {
+    const isDate = viewMode.value === "date";
+    dateWrap.classList.toggle("hidden", !isDate);
+  }
+
+  async function fetchAppointments(statusOverride) {
+    const mode = viewMode.value;
+
+    const payload = {
+      p_date: mode === "date" ? dateInput.value : null,
+      p_upcoming: mode === "upcoming",
+      p_status:
+        statusOverride === undefined
+          ? (statusFilter.value === "all" ? null : statusFilter.value)
+          : statusOverride,
+      p_barber_id: selectedBarberId()
+    };
+
+    const { data, error } = await window.sb.rpc(
+      "barber_dashboard_appointments",
+      payload
+    );
+
+    if (error) throw error;
+
+    return data || [];
+  }
+
+  async function loadAppointments() {
+    list.innerHTML =
+      `<div class="empty-state">Carregando agenda...</div>`;
+
+    setInlineStatus("");
+
+    try {
+      const rows = await fetchAppointments();
+
+      const title =
+        viewMode.value === "upcoming"
+          ? "Próximos agendamentos"
+          : brDate(dateInput.value);
+
+      document.getElementById("agendaDateTitle").textContent = title;
+      document.getElementById("agendaCount").textContent =
+        `${rows.length} ${rows.length === 1 ? "cliente" : "clientes"}`;
+
+      // Estatísticas sem aplicar filtro de status.
+      const statRows = await fetchAppointments(null);
+
+      document.getElementById("statTotal").textContent =
+        statRows.length;
+
+      document.getElementById("statConfirmed").textContent =
+        statRows.filter(row =>
+          row.status === "confirmed" || row.status === "pending"
+        ).length;
+
+      document.getElementById("statCompleted").textContent =
+        statRows.filter(row => row.status === "completed").length;
+
+      document.getElementById("statCancelled").textContent =
+        statRows.filter(row =>
+          row.status === "cancelled" || row.status === "no_show"
+        ).length;
+
+      if (!rows.length) {
+        list.innerHTML = `
+          <div class="empty-state">
+            Nenhum cliente encontrado para os filtros selecionados.
           </div>
+        `;
+        return;
+      }
 
-          <div class="appointment-client">
-            <div class="appointment-avatar">${html((row.customer_name || "?").charAt(0).toUpperCase())}</div>
-            <div>
-              <strong>${html(row.customer_name)}</strong>
-              <span>${html(phone)}</span>
-              ${profile.role === "admin" ? `<small>${html(barberName)}</small>` : ""}
+      list.innerHTML = rows.map(row => {
+        const time = String(row.appointment_time || "").slice(0, 5);
+        const phone = phoneDisplay(row.phone);
+        const wa = waPhone(row.phone);
+
+        const statusLabels = {
+          pending: "Pendente",
+          confirmed: "Confirmado",
+          completed: "Concluído",
+          cancelled: "Cancelado",
+          no_show: "Não compareceu"
+        };
+
+        return `
+          <article class="appointment-card" data-id="${html(row.appointment_id)}">
+
+            <div class="appointment-time">
+              <strong>${html(time)}</strong>
+              <span>${html(compactDate(row.appointment_date))}</span>
             </div>
-          </div>
 
-          <div class="appointment-status-wrap">
-            <span class="status-pill status-${html(row.status)}">${html(statusLabels[row.status] || row.status)}</span>
-            <span class="reminder-chip">${row.reminder_consent ? "🔔 lembrete ativo" : "🔕 sem lembrete"}</span>
-          </div>
+            <div class="appointment-client">
+              <div class="appointment-avatar">
+                ${html((row.customer_name || "?").charAt(0).toUpperCase())}
+              </div>
 
-          <div class="appointment-actions">
-            <a class="small-action" href="https://wa.me/${html(wa)}" target="_blank" rel="noopener">WhatsApp</a>
-            <button class="small-action success" data-action="completed" type="button">Concluir</button>
-            <button class="small-action" data-action="confirmed" type="button">Confirmar</button>
-            <button class="small-action danger" data-action="cancelled" type="button">Cancelar</button>
-          </div>
-        </article>
+              <div>
+                <strong>${html(row.customer_name)}</strong>
+                <span>${html(phone)}</span>
+
+                <small>
+                  ${html(row.service_name || "Atendimento")}
+                  ${profile.role === "admin"
+                    ? ` • ${html(row.barber_name || "")}`
+                    : ""}
+                </small>
+              </div>
+            </div>
+
+            <div class="appointment-status-wrap">
+              <span class="status-pill status-${html(row.status)}">
+                ${html(statusLabels[row.status] || row.status)}
+              </span>
+
+              <span class="reminder-chip">
+                🔔 ${Number(row.sent_reminders || 0)} enviado(s)
+                • ${Number(row.pending_reminders || 0)} pendente(s)
+              </span>
+            </div>
+
+            <div class="appointment-actions">
+              <button
+                class="small-action reminder-action"
+                data-reminder-now
+                type="button">
+                🔔 Enviar lembrete agora
+              </button>
+
+              <a
+                class="small-action"
+                href="https://wa.me/${html(wa)}"
+                target="_blank"
+                rel="noopener">
+                Abrir WhatsApp
+              </a>
+
+              <button
+                class="small-action success"
+                data-action="completed"
+                type="button">
+                Concluir
+              </button>
+
+              <button
+                class="small-action"
+                data-action="confirmed"
+                type="button">
+                Confirmar
+              </button>
+
+              <button
+                class="small-action danger"
+                data-action="cancelled"
+                type="button">
+                Cancelar
+              </button>
+            </div>
+
+          </article>
+        `;
+      }).join("");
+
+      bindAppointmentActions();
+
+    } catch (error) {
+      console.error(error);
+
+      list.innerHTML = `
+        <div class="empty-state">
+          Erro ao carregar os agendamentos.
+        </div>
       `;
-    }).join("");
 
+      setInlineStatus(
+        error.message || "Falha ao carregar a agenda.",
+        true
+      );
+    }
+  }
+
+  function bindAppointmentActions() {
     list.querySelectorAll("[data-action]").forEach(button => {
       button.addEventListener("click", async () => {
         const card = button.closest(".appointment-card");
-        const id = card.dataset.id;
+        const appointmentId = card.dataset.id;
         const newStatus = button.dataset.action;
 
         button.disabled = true;
 
-        const { error: updateError } = await window.sb
-          .from("appointments")
-          .update({ status: newStatus })
-          .eq("id", id);
+        const { error } = await window.sb.rpc(
+          "barber_update_appointment_status",
+          {
+            p_appointment_id: appointmentId,
+            p_status: newStatus
+          }
+        );
 
-        if (updateError) {
-          console.error(updateError);
-          inlineStatus.textContent = "Não foi possível atualizar o atendimento.";
+        if (error) {
+          console.error(error);
+          setInlineStatus(
+            error.message || "Não foi possível atualizar o atendimento.",
+            true
+          );
           button.disabled = false;
           return;
         }
+
+        setInlineStatus("Status atualizado.");
+        await loadAppointments();
+      });
+    });
+
+    list.querySelectorAll("[data-reminder-now]").forEach(button => {
+      button.addEventListener("click", async () => {
+        const card = button.closest(".appointment-card");
+        const appointmentId = card.dataset.id;
+
+        button.disabled = true;
+        const oldText = button.textContent;
+        button.textContent = "Enfileirando...";
+
+        const { error } = await window.sb.rpc(
+          "barber_queue_manual_reminder",
+          {
+            p_appointment_id: appointmentId
+          }
+        );
+
+        button.disabled = false;
+        button.textContent = oldText;
+
+        if (error) {
+          console.error(error);
+
+          const raw = String(error.message || "");
+
+          if (raw.includes("MANUAL_REMINDER_ALREADY_QUEUED")) {
+            setInlineStatus(
+              "Já existe um lembrete manual aguardando envio para este cliente.",
+              true
+            );
+            return;
+          }
+
+          setInlineStatus(
+            raw || "Não foi possível enfileirar o lembrete.",
+            true
+          );
+          return;
+        }
+
+        setInlineStatus(
+          "Lembrete manual colocado na fila. O celular de automação deverá enviá-lo no próximo polling."
+        );
 
         await loadAppointments();
       });
     });
   }
 
-  dateInput.addEventListener("change", loadAppointments);
-  statusFilter.addEventListener("change", loadAppointments);
-  barberFilter?.addEventListener("change", loadAppointments);
-  document.getElementById("refreshAppointments").addEventListener("click", loadAppointments);
+  updateViewControls();
+  await loadReminderSettings();
+  await loadAppointments();
 
-  document.getElementById("adminLogout").addEventListener("click", async () => {
-    await window.sb.auth.signOut();
-    window.location.href = "./admin-login.html";
+  viewMode.addEventListener("change", async () => {
+    updateViewControls();
+    await loadAppointments();
   });
 
-  await loadAppointments();
+  dateInput.addEventListener("change", loadAppointments);
+  statusFilter.addEventListener("change", loadAppointments);
+
+  barberFilter?.addEventListener("change", async () => {
+    await loadReminderSettings();
+    await loadAppointments();
+  });
+
+  document.getElementById("refreshAppointments")
+    .addEventListener("click", async () => {
+      await loadReminderSettings();
+      await loadAppointments();
+    });
+
+  document.getElementById("adminLogout")
+    .addEventListener("click", async () => {
+      await window.sb.auth.signOut();
+      window.location.href = "./admin-login.html";
+    });
 }
 
 initAdmin();
